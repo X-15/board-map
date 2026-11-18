@@ -261,7 +261,7 @@ table.keys td { padding: 3px 10px 3px 0; vertical-align: top; }
    ===================================================================================== */
 window.BOARD_DATA = {
   version: "2026-11-18 (stock edition)",
-  about: "Schematic map of one game controller board as shipped, with one change: a burned field-return fuse bit. Built from hands-on reverse engineering of that board (flash dumps, disassembly, measurements over USB); positions on the board are schematic.",
+  about: "Schematic map of one game controller board as shipped, with one change: a burned field-return fuse bit. Built from hands-on reverse engineering of that board (flash dumps, disassembly, measurements over USB); positions of the main parts follow photos of the board, the other parts are placed schematically.",
   marks: {
     measured: { label: "measured / tested on the board", short: "measured", color: "#22b573" },
     static: { label: "read from the firmware (static analysis)", short: "static", color: "#3d86ff" },
@@ -304,12 +304,13 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "chip",
-      pos: [-3, -4],
-      size: [9, 1.4, 9],
+      pos: [-14.4, -2.8],
+      size: [7.2, 1.4, 7.1],
       opens: "soc",
       one: "The brain of the board: one chip with the CPU core, all of its working memory and the circuits that talk to buttons, sticks, USB and everything else. Open it to look inside.",
       tech: [
-        "i.MX RT1060 family. The package is marked MIMXRT1061DVL6A (read off a photo of the board); an outside board description names the sister part RT1062.",
+        "Position read off photos of the board.",
+        "i.MX RT1060 family. The package is marked MIMXRT1061DVL6A (read off a photo of the board); a devicetree for this controller from an open-source RTOS port (not all of it checked on the board) names the sister part RT1062.",
         "One Cortex-M7 core, Thumb-2 code.",
         "Boot ROM at `0x00200000`; the ROM addresses here are for one ROM image (HAB 4.3.7).",
         "Internal RAM only: the MPU and heap tables use the chip's own 1 MB; nothing references the external-memory controller.",
@@ -317,7 +318,7 @@ window.BOARD_DATA = {
       ],
       src: [
         ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Flash dump of the board and disassembly of the stock firmware image", ""]
       ]
     },
@@ -327,11 +328,12 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "chip",
-      pos: [-17, -12],
-      size: [6, 1, 4.5],
+      pos: [-20, 2.1],
+      size: [4, 1, 3.55],
       opens: "flash",
       one: "The board's disk: 16 MB that keep the boot setup, the bootloader and the firmware with the power off. The processor runs code straight out of it. Open it to see what is stored where.",
       tech: [
+        "Position read off photos of the board.",
         "NOR flash on the FlexSPI controller (`0x402A8000`), mapped at `0x60000000` (execute in place).",
         "4 KB erase sectors; writes page-aligned (`0x100`) and only to erased pages.",
         "Device ID read as `0x17c8` (16 MB).",
@@ -340,7 +342,7 @@ window.BOARD_DATA = {
       ],
       src: [
         ["Tested on the board with its own signed flashloader", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Flash dump of the board", ""]
       ]
     },
@@ -350,18 +352,19 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [7, -10.5],
-      size: [6, 0.9, 4],
+      pos: [0.8, -7.1],
+      size: [12.8, 0.9, 11.71],
       one: "A separate radio for wireless play and Wi-Fi. None of the scenarios here use it.",
       tech: [
+        "Position read off photos of the board. The shield can with a chip and a crystal under it is taken to be the radio (Wi-Fi + Bluetooth).",
         "Bluetooth on LPUART3 with hardware flow control, up to 4 Mbaud; enable pin GPIO3_IO20.",
         "Wi-Fi over SDIO on USDHC1, at most 50 MHz; enable GPIO3_IO21, host wake GPIO3_IO23.",
-        "Radio driver strings are in the stock image (confirmed); the wiring is from the board description (not checked).",
+        "Radio driver strings are in the stock image (confirmed); the wiring is from that devicetree (not checked).",
         "The stock app holds a Bluetooth gamepad mode (HID over GATT) that is present and switched off; not traced."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Measured on the board: input-report timing over USB", ""]
       ]
     },
@@ -371,19 +374,20 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "stick",
-      pos: [-24, -3],
-      size: [5, 1, 5],
+      pos: [-16.8, 11.7],
+      size: [8.8, 1.4, 8.52],
       one: "A thumbstick: two sensors measure how far it is pushed left-right and up-down. Pressing it down is the L3 button.",
       tech: [
-        "ADC1 channel 11 = X, 12 = Y (traced in the code). Press (L3): GPIO1_IO00 (board description).",
+        "Position read off photos of the board.",
+        "ADC1 channel 11 = X, 12 = Y (traced in the code). Press (L3): GPIO1_IO00 (from that devicetree).",
         "Calibration stored on this board (ADC counts 0..4095): X min 868, centre band 2184-2224, max 3333; Y 813 / 1970-2035 / 3275. Read from RAM through the memory-read diagnostic patch.",
         "Stock 8-bit values, interactive test: rest exactly 0, no wobble; range 98-100 % in all four directions; rests after letting go within 0.9 %; rim 0.5 % off a circle; 252 distinct values on a slow sweep. Measured through a modified USB interface that passed the stock 8-bit values on.",
-        "Sensor type: hall-effect according to the board description; not checked on the board."
+        "Sensor type: hall-effect according to that devicetree; not checked on the board."
       ],
       src: [
         ["Disassembly of the stock firmware's stick code", ""],
         ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
       ]
     },
     {
@@ -392,17 +396,18 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "stick",
-      pos: [8, 9],
-      size: [5, 1, 5],
+      pos: [20, 11.7],
+      size: [8.8, 1.4, 8.52],
       one: "The second thumbstick, same design as the left one. Pressing it down is R3.",
       tech: [
-        "ADC1 channel 9 = X, 10 = Y. Press (R3): GPIO1_IO02 (board description).",
+        "Position read off photos of the board.",
+        "ADC1 channel 9 = X, 10 = Y. Press (R3): GPIO1_IO02 (from that devicetree).",
         "Calibration stored on this board: X 844 / 2091-2141 / 3261; Y 891 / 1998-2065 / 3258. Read from RAM through the memory-read diagnostic patch.",
         "Stock 8-bit values, interactive test: rest exactly 0; range 99-100 %; rests within 1.1 %; rim 0.5 % off a circle; 255 distinct values on a slow sweep. Measured through a modified USB interface that passed the stock 8-bit values on."
       ],
       src: [
         ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
       ]
     },
     {
@@ -411,10 +416,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "trigger",
-      pos: [-20, -16],
+      pos: [-47, -9],
       size: [4, 1.6, 2.6],
       one: "An analog trigger: the firmware reads how far it is pulled, not just on or off.",
       tech: [
+        "Not on the main board in the photos.",
         "ADC1 channel 13, 32-sample hardware averaging (sticks: none).",
         "Both triggers read raw 739 / 685 at rest and 1744 / 1731 pressed (read from RAM with a diagnostic patch).",
         "Stock report: 13-point curve, then 409..3891 maps to 0..255 (a tenth of dead travel at each end)."
@@ -422,7 +428,7 @@ window.BOARD_DATA = {
       src: [
         ["Disassembly of the stock firmware's stick code", ""],
         ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
       ]
     },
     {
@@ -431,14 +437,18 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "static",
       shape: "trigger",
-      pos: [12, -16],
+      pos: [47, -9],
       size: [4, 1.6, 2.6],
       one: "The right analog trigger, read like the left one.",
       tech: [
+        "Not on the main board in the photos.",
         "ADC1 channel 8, 32-sample averaging.",
-        "Triggers are analog; they are assumed to have no pin interrupt and to be seen only by the 4 ms timed sample (an inference from the board description: four reported buttons showed no interrupt, two of which may be these triggers)."
+        "Triggers are analog; they are assumed to have no pin interrupt and to be seen only by the 4 ms timed sample (an inference from that devicetree: four reported buttons showed no interrupt, two of which may be these triggers)."
       ],
-      src: [["Disassembly of the stock firmware's stick code", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
+      src: [
+        ["Disassembly of the stock firmware's stick code", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
+      ]
     },
     {
       id: "dpad",
@@ -446,15 +456,16 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "cross",
-      pos: [-21, 9],
+      pos: [-47, 14],
       size: [5, 0.6, 5],
       one: "Four direction buttons. Each one is a simple switch that pulls a processor pin low when pressed.",
       tech: [
-        "Up / down / left / right: GPIO3_IO00-03, pull-up, active low (board description, not checked).",
+        "Not on the main board in the photos.",
+        "Up / down / left / right: GPIO3_IO00-03, pull-up, active low (that devicetree, not checked).",
         "The d-pad buttons raise a pin interrupt. Measured through the memory-read diagnostic patch (trace ring)."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
       ]
     },
@@ -464,15 +475,16 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "dome4",
-      pos: [17, -3],
+      pos: [47, 14],
       size: [6, 0.6, 6],
       one: "The four face buttons. Pressing one connects a pin to ground; the processor notices within microseconds.",
       tech: [
-        "A GPIO2_IO00, B GPIO2_IO01, X GPIO2_IO02, Y GPIO2_IO03; pull-up, active low (board description).",
+        "Not on the main board in the photos.",
+        "A GPIO2_IO00, B GPIO2_IO01, X GPIO2_IO02, Y GPIO2_IO03; pull-up, active low (from that devicetree).",
         "Pin interrupt -> sample 20-30 us, sample -> report built 250-300 us: measured pooled over the buttons that have a pin interrupt; which reported button is which pin was not mapped. Measured through the memory-read diagnostic patch (trace ring)."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
       ]
     },
@@ -482,11 +494,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "pills",
-      pos: [-11, 4],
+      pos: [-11, 25],
       size: [4, 0.5, 1.6],
       one: "The two small buttons in the middle.",
-      tech: ["options GPIO2_IO12, menu GPIO2_IO13 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Not on the main board in the photos.", "options GPIO2_IO12, menu GPIO2_IO13 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "btn_home",
@@ -494,11 +506,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "dome",
-      pos: [-4, 4],
+      pos: [-5.5, 25],
       size: [2, 0.6, 2],
       one: "The logo button.",
-      tech: ["GPIO2_IO11 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Not on the main board in the photos.", "GPIO2_IO11 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "btn_assistant",
@@ -506,11 +518,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "dome",
-      pos: [0.5, 4],
+      pos: [0, 25],
       size: [1.8, 0.5, 1.8],
       one: "One of the extra buttons in the middle of the board.",
-      tech: ["GPIO2_IO14 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Not on the main board in the photos.", "GPIO2_IO14 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "btn_capture",
@@ -518,11 +530,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "dome",
-      pos: [4, 4],
+      pos: [5.5, 25],
       size: [1.8, 0.5, 1.8],
       one: "Another extra button in the middle of the board.",
-      tech: ["GPIO2_IO15 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Not on the main board in the photos.", "GPIO2_IO15 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "btn_l1",
@@ -530,11 +542,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [-28, -16],
-      size: [5, 0.8, 2],
+      pos: [-22.4, -16],
+      size: [3, 0.8, 1.6],
       one: "The left shoulder button.",
-      tech: ["GPIO4_IO00 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Position read off photos of the board. The switch at this corner is taken to be the L1 bumper.", "GPIO4_IO00 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "btn_r1",
@@ -542,11 +554,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [20, -16],
-      size: [5, 0.8, 2],
+      pos: [23.2, -16.7],
+      size: [3, 0.8, 1.6],
       one: "The right shoulder button.",
-      tech: ["GPIO4_IO01 (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Position read off photos of the board. The switch at this corner is taken to be the R1 bumper.", "GPIO4_IO01 (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "usb_c",
@@ -554,16 +566,17 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "conn",
-      pos: [24.5, 0],
-      size: [3, 1.2, 4.2],
+      pos: [0, -16.5],
+      size: [5.6, 1.2, 3.55],
       one: "Where the cable to the PC plugs in. Everything between board and PC (input, rumble, logs, flashing) passes through here.",
       tech: [
+        "Position read off photos of the board.",
         "USB1 with its PHY, high speed (read from the running device).",
-        "Device and host mode are declared in the board description; which one the stock firmware uses was not checked (towards the PC it behaves as a device).",
+        "Device and host mode are declared in that devicetree; which one the stock firmware uses was not checked (towards the PC it behaves as a device).",
         "The board runs on its battery: a replug does not restart it."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["USB descriptors read from the running board and from its flash dump", ""],
         ["Experience with the board", ""]
       ]
@@ -574,11 +587,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [19.5, 5],
+      pos: [-9, 8.4],
       size: [2.4, 0.6, 2.4],
-      one: "A small chip that handles the USB-C port. Only named in comments of the board description; nothing in this map uses it.",
-      tech: ["I2C1 address `0x47` (named only in comments)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      one: "A small chip that handles the USB-C port. Only named in comments of that devicetree; nothing in this map uses it.",
+      tech: ["Where this part sits on the board is not identified.", "I2C1 address `0x47` (named only in comments)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "charger",
@@ -586,16 +599,17 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "static",
       shape: "box",
-      pos: [14, 9],
-      size: [2.6, 0.6, 2.6],
+      pos: [16.8, -1.8],
+      size: [2.6, 0.7, 2.6],
       one: "Charges the battery from USB power.",
       tech: [
-        "I2C1 address `0x6b` (named only in comments of the board description).",
+        "Position read off photos of the board. The chip is presumably the charger the firmware log names (fairly, not fully certain); it sits in the shielded power area.",
+        "I2C1 address `0x6b` (named only in comments of that devicetree).",
         "The charger driver logs its fast-charge setting ('fastcharge set to 960'); the line was seen in the firmware's log, read with a diagnostic change.",
         "Vendor request `0x80` disables charging from USB (read from the code, not sent)."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["The firmware's own log, read over USB with a diagnostic change", ""],
         ["Disassembly of the stock firmware; the request was sent to the board", ""]
       ]
@@ -606,10 +620,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "battery",
-      pos: [-6, 13.5],
+      pos: [0, 33],
       size: [13, 1.2, 6],
       one: "Keeps the board running even when the USB cable is pulled. That is why a replug does not restart the board.",
       tech: [
+        "Not on the main board in the photos; how it is connected is not identified.",
         "Label (read by the owner): 3.8 V nominal, 2000 mAh, 7.6 Wh.",
         "Firmware table: 3400 mV empty; 4350 mV is the charge voltage of such a cell (general knowledge about such cells).",
         "Pitfall: fully power down before expecting a clean download-mode entry; a USB replug does not restart the board."
@@ -622,19 +637,20 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "static",
       shape: "box",
-      pos: [3, 13],
+      pos: [-4.5, 8.4],
       size: [2.4, 0.6, 2.4],
       one: "Measures the battery. The rumble code asks it for the battery voltage every time it sets motor strength.",
       tech: [
+        "Where this part sits on the board is not identified.",
         "I2C1 address `0x55`; voltage in register `0x04` (mV).",
         "Configuration table at `0x60acbafc`: 4350, 1000, 2000, 3400, 200, 120, 120, 1500.",
-        "Interrupt on GPIO2_IO28 (board description).",
+        "Interrupt on GPIO2_IO28 (from that devicetree).",
         "This board's battery voltage was never read (no USB request returns it)."
       ],
       src: [
         ["Disassembly of the stock firmware's rumble code", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
       ]
     },
     {
@@ -643,18 +659,19 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "motor",
-      pos: [-30, 11],
+      pos: [-48, 5],
       size: [3, 3, 5],
       one: "One of the two vibration motors. The owner felt them run when the PC sent rumble reports.",
       tech: [
-        "Driven by FlexPWM4 (submodules 2 and 3 per the board description).",
+        "Not on the main board in the photos.",
+        "Driven by FlexPWM4 (submodules 2 and 3 per that devicetree).",
         "Which motor is big or small: not recorded.",
         "Rated voltage and driver current limit: not known; the firmware drives as if the battery were always 3.4 V."
       ],
       src: [
         ["HID report descriptor read from the running board", ""],
         ["Open points", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Tested on the board: rumble reports sent from the PC", ""]
       ]
     },
@@ -664,13 +681,13 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "motor",
-      pos: [22, 12],
+      pos: [48, 5],
       size: [3, 3, 5],
       one: "The second vibration motor.",
-      tech: ["Same drive path as motor 1. Which is which is not recorded."],
+      tech: ["Not on the main board in the photos.", "Same drive path as motor 1. Which is which is not recorded."],
       src: [
         ["HID report descriptor read from the running board", ""],
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""]
       ]
     },
     {
@@ -679,15 +696,16 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [14, 16],
-      size: [3.2, 0.6, 3],
+      pos: [1.6, 16.7],
+      size: [5.6, 0.6, 4.97],
       one: "Sound chip for a headset. Not used by this project.",
       tech: [
+        "Position read off photos of the board. This is the place of the 3.5 mm jack; where the codec chip sits is not identified.",
         "Codec at I2C1 `0x1a`, audio on SAI1 with master clock out; headset-jack detection at `0x3b` (comments).",
         "The stock app has a second USB configuration with 5 interfaces including USB audio; this board reports the 2-interface one."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["USB descriptors of the stock firmware, read from the board and its flash dump", ""]
       ]
     },
@@ -697,11 +715,11 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [-15, 1.5],
+      pos: [0, 8.4],
       size: [2.2, 0.5, 2.2],
       one: "Drives the board's lights.",
-      tech: ["I2C2 address `0x30` (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["Where this part sits on the board is not identified.", "I2C2 address `0x30` (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "hall_pwr",
@@ -709,11 +727,14 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "box",
-      pos: [-16, -4.5],
+      pos: [4.5, 8.4],
       size: [2, 0.5, 2],
       one: "A pin that switches the power for the stick sensors on and off.",
-      tech: ["GPIO2_IO10, active low: 'a supply for the hall-effect sensors' (board description, not checked). Which sensors it feeds is not listed."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: [
+        "Where this part sits on the board is not identified.",
+        "GPIO2_IO10, active low: 'a supply for the hall-effect sensors' (that devicetree, not checked). Which sensors it feeds is not listed."
+      ],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "uart_pads",
@@ -721,16 +742,17 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "inferred",
       shape: "pad",
-      pos: [-31, 3],
+      pos: [-6, 11.6],
       size: [2.6, 0.3, 1.6],
       one: "A classic debug serial port. Logging to it is switched off by default; whether anything is printed there, and whether the pads can be reached, is not known.",
       tech: [
-        "LPUART1, 115200 baud, TX on pad GPIO_AD_B0_12, RX on GPIO_AD_B0_13 (board description).",
+        "Where this part sits on the board is not identified.",
+        "LPUART1, 115200 baud, TX on pad GPIO_AD_B0_12, RX on GPIO_AD_B0_13 (from that devicetree).",
         "UART logging is gated by a development fuse and the setting `LogToUart` (`0x45`, default 0)."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
-        ["Inference from the third-party board description", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+        ["Inference from that devicetree", ""],
         ["Disassembly of the stock firmware, single reading, not independently verified", ""],
         ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]
       ]
@@ -741,10 +763,14 @@ window.BOARD_DATA = {
       kind: "hw",
       mark: "measured",
       shape: "dome",
-      pos: [-31, -8],
+      pos: [-1.5, 11.6],
       size: [2, 0.8, 2],
       one: "The board's own button. It switches the board on; held while powering on, it opens the chip's USB download mode (SDP), the recovery door that always works.",
-      tech: ["Used many times: after a full power-down, hold it while powering on -> ROM SDP.", "Which pin it is and how the boot ROM sees it is not known."],
+      tech: [
+        "Where this part sits on the board is not identified.",
+        "Used many times: after a full power-down, hold it while powering on -> ROM SDP.",
+        "Which pin it is and how the boot ROM sees it is not known."
+      ],
       src: [["The chip's USB download mode, used on the board", ""], ["Experience with the board", ""], ["Used on the board for recovery", ""]]
     },
     {
@@ -754,10 +780,11 @@ window.BOARD_DATA = {
       mark: "unknown",
       ghost: true,
       shape: "ghost",
-      pos: [-31, -12.5],
+      pos: [3, 11.6],
       size: [2.6, 0.5, 2.6],
       one: "At start-up the firmware reads five input pins (taken to be buttons); one particular combination reboots into the download mode. Which buttons is not known.",
       tech: [
+        "Where this part sits on the board is not identified.",
         "Board init (`board.cc`, `0x6088a29c`): five GPIO inputs; four reading 0 and the fifth non-zero -> reboot into the BootROM.",
         "Pins and buttons: not worked out."
       ],
@@ -770,11 +797,14 @@ window.BOARD_DATA = {
       mark: "unknown",
       ghost: true,
       shape: "ghost",
-      pos: [-21, 15.5],
-      size: [5, 0.6, 3.4],
+      pos: [16.8, -1.8],
+      size: [9.6, 0.5, 10.65],
       one: "How battery and USB power become the chip's supply voltages is not known.",
-      tech: ["Not documented."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: [
+        "Position read off photos of the board. A shielded area with several small chips; what they are is not identified, except one that presumably is the charger.",
+        "Not documented."
+      ],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "unk_clock",
@@ -783,14 +813,93 @@ window.BOARD_DATA = {
       mark: "unknown",
       ghost: true,
       shape: "ghost",
-      pos: [-9, -14.5],
-      size: [2.4, 0.5, 1.6],
+      pos: [-16, 1.7],
+      size: [2.4, 0.5, 1.2],
       one: "Two crystals sit beside the processor (seen in a photo of the board); their frequencies and the clock setup are not established. Known: the timer the firmware uses ticks at 75 MHz.",
       tech: [
+        "Position read off photos of the board. Two crystals sit beside the processor.",
         "Two crystals beside the processor in a photo of the board; frequencies and PLL setup not established.",
         "GPT2 runs at 75 MHz (read from the running firmware)."
       ],
       src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
+    },
+    {
+      id: "unk_spring",
+      label: "Spring contact (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [13.6, -16],
+      size: [2, 0.5, 1.4],
+      one: "A spring contact near the right shoulder switch (seen in photos of the board); not identified.",
+      tech: ["Position read off photos of the board. Spring contact seen near the right shoulder switch; seen in photos, not identified."],
+      src: [["Photos of the board (component side)", ""]]
+    },
+    {
+      id: "unk_wavechip",
+      label: "Chip with a wave logo (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [-2.4, 2.5],
+      size: [2.4, 0.5, 2.4],
+      one: "A chip with a wave-shaped logo next to the processor (seen in photos of the board); not identified.",
+      tech: ["Position read off photos of the board. Chip with a wave-shaped logo; seen in photos, not identified."],
+      src: [["Photos of the board (component side)", ""]]
+    },
+    {
+      id: "unk_flexcon",
+      label: "Flat-cable connector (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [-37.6, 7.1],
+      size: [2.4, 0.6, 7.1],
+      one: "A flat-cable connector at the left edge (seen in photos of the board). What it goes to is not identified.",
+      tech: ["Position read off photos of the board. Flat-cable connector; what it goes to is not identified."],
+      src: [["Photos of the board (component side)", ""]]
+    },
+    {
+      id: "unk_wire1",
+      label: "Wire connector, left (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [-29.6, 15.3],
+      size: [2.4, 0.6, 1.6],
+      one: "A 2-pin wire connector on the underside of the board, near the left front corner (seen in photos). What it goes to is not identified.",
+      tech: ["Position read off photos of the board. Wire connector on the underside of the board; what it goes to is not identified."],
+      src: [["Photos of the board (component side)", ""]]
+    },
+    {
+      id: "unk_wire2",
+      label: "Wire connector, right (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [32, 15.3],
+      size: [2.4, 0.6, 1.6],
+      one: "A 2-pin wire connector on the underside of the board, near the right front corner (seen in photos). What it goes to is not identified.",
+      tech: ["Position read off photos of the board. Wire connector on the underside of the board; what it goes to is not identified."],
+      src: [["Photos of the board (component side)", ""]]
+    },
+    {
+      id: "unk_wire3",
+      label: "Wire connector, large (?)",
+      kind: "hw",
+      mark: "unknown",
+      ghost: true,
+      shape: "ghost",
+      pos: [31.2, 4.6],
+      size: [3.2, 0.6, 2.4],
+      one: "A larger wire connector on the underside of the board, at the right side (seen in photos). What it goes to is not identified.",
+      tech: ["Position read off photos of the board. Wire connector on the underside of the board; what it goes to is not identified."],
+      src: [["Photos of the board (component side)", ""]]
     },
     {
       id: "soc_rom",
@@ -798,7 +907,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [-9, -15],
+      pos: [-20.4, -13.8],
       size: [4, 1, 3],
       range: [0x200000, 0x21FFFF],
       one: "Code built into the chip at the factory. It runs first at every power-on and decides what may run next.",
@@ -818,7 +927,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "measured",
-      pos: [-4, -15],
+      pos: [-15.4, -13.8],
       size: [3, 0.8, 2.4],
       range: [0x401F4000, 0x401F4FFF],
       one: "One-time switches inside the chip. Shipped units leave secure boot closed; on this board one extra bit, the field-return bit, is burned. It is the only change this edition shows.",
@@ -844,7 +953,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "measured",
-      pos: [0.5, -15],
+      pos: [-10.9, -13.8],
       size: [3.2, 0.8, 2.4],
       range: [0x400F8030, 0x400F803B],
       one: "Three small registers that survive a restart. Bootloader and firmware leave each other messages in them: 'boot slot A', 'go to download mode', 'boot failed'.",
@@ -862,18 +971,18 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [5.2, -15],
+      pos: [-6.2, -13.8],
       size: [3.6, 0.8, 2.4],
       one: "The chip's fast RAM can be divided different ways. The bootloader picks a split with lots of data RAM.",
       tech: [
         "Bootloader writes `IOMUXC_GPR17 = 0xeaaaaaaa`: 480 KB DTCM + 32 KB ITCM (top of DTCM `0x20078000`).",
-        "Fuse default would be 256 KB OCRAM, 128 KB DTCM, 128 KB ITCM (board description).",
-        "The board description says these registers are not reset when going to SDP from the bootloader; that is one untested idea for why the flashloader fails from that route. The bootloader's code writes this split only after its jump to the ROM, so the idea is open."
+        "Fuse default would be 256 KB OCRAM, 128 KB DTCM, 128 KB ITCM (from that devicetree).",
+        "That devicetree says these registers are not reset when going to SDP from the bootloader; that is one untested idea for why the flashloader fails from that route. The bootloader's code writes this split only after its jump to the ROM, so the idea is open."
       ],
       src: [
         ["Disassembly of the bootloader from the board's flash dump", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
-        ["Inference from the third-party board description", ""]
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+        ["Inference from that devicetree", ""]
       ]
     },
     {
@@ -882,7 +991,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [10, -15],
+      pos: [-1.4, -13.8],
       size: [3, 0.8, 2.4],
       one: "Safety timers that would restart a frozen chip. Both bootloader and firmware switch them off, so a hard hang stays hung until power-off.",
       tech: ["Application start-up `0x60843ad4`-`0x60843b12` disables WDOG1 and WDOG2 and unlocks and disables RTWDOG; the bootloader does the same."],
@@ -894,7 +1003,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [-3, -9.5],
+      pos: [-14.4, -8.3],
       size: [6, 1.6, 4],
       one: "The CPU. It runs everything: the ROM, the bootloader and the firmware, one instruction at a time.",
       tech: [
@@ -909,7 +1018,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [4, -9.5],
+      pos: [-7.4, -8.3],
       size: [3.2, 0.8, 2.4],
       range: [0x401F0000, 0x401F3FFF],
       one: "The chip's stopwatch. The firmware stamps input events with it in microseconds. What drives the 4 ms input tick was not identified.",
@@ -925,7 +1034,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc",
       mark: "static",
-      pos: [-10.5, -3.5],
+      pos: [-21.9, -2.3],
       size: [2.6, 1, 3.4],
       range: [0x0, 0x7FFF],
       one: "A small, very fast memory for code, at address 0.",
@@ -944,7 +1053,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc",
       mark: "static",
-      pos: [-4, -3.5],
+      pos: [-15.4, -2.3],
       size: [8, 1, 4.4],
       range: [0x20000000, 0x20077FFF],
       one: "The main fast working memory. The firmware keeps its live data here: stick values, settings, logs, USB buffers.",
@@ -966,7 +1075,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc",
       mark: "static",
-      pos: [6, -3.5],
+      pos: [-5.4, -2.3],
       size: [9, 1, 4.4],
       range: [0x20200000, 0x2027FFFF],
       one: "A second, larger RAM. The firmware uses it as heap.",
@@ -982,7 +1091,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [-10.5, 2.5],
+      pos: [-21.9, 3.7],
       size: [3.4, 0.8, 2.6],
       range: [0x402A8000, 0x402ABFFF],
       one: "Talks to the flash chip and makes it look like ordinary memory, so code can run straight from flash.",
@@ -998,7 +1107,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "measured",
-      pos: [-5.8, 2.5],
+      pos: [-17.2, 3.7],
       size: [3.8, 0.8, 2.6],
       range: [0x402E0000, 0x402E01FF],
       one: "The USB hardware: it sends and receives packets on the cable when the PC asks, and interrupts the CPU when something arrives.",
@@ -1019,7 +1128,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "static",
-      pos: [-1.4, 2.5],
+      pos: [-12.8, 3.7],
       size: [3, 0.8, 2.6],
       one: "Turns the stick and trigger sensor voltages into numbers from 0 to 4095.",
       tech: ["Channels: RT 8, RX 9, RY 10, LX 11, LY 12, LT 13.", "Read routine `0x60860dfe`: sticks one sample, no averaging; triggers 32-sample averaging."],
@@ -1031,7 +1140,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "measured",
-      pos: [2.6, 2.5],
+      pos: [-8.8, 3.7],
       size: [3.4, 0.8, 2.6],
       one: "The pins that see button presses. A press can raise an interrupt, so the firmware reacts at once instead of waiting for the next check.",
       tech: [
@@ -1040,7 +1149,7 @@ window.BOARD_DATA = {
         "Four HID buttons (14, 15, 19, 20) come without an interrupt; which physical buttons they are is not mapped."
       ],
       src: [
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
       ]
     },
@@ -1050,12 +1159,12 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [7, 2.5],
+      pos: [-4.4, 3.7],
       size: [3.4, 0.8, 2.6],
       one: "Switches the motor power on and off very fast; the on-share (duty) sets the vibration strength.",
-      tech: ["Two outputs, submodules 2 and 3 (board description).", "The PWM driver rejects duty outside 0-100 % (`pwm.cc`, read from the code)."],
+      tech: ["Two outputs, submodules 2 and 3 (from that devicetree).", "The PWM driver rejects duty outside 0-100 % (`pwm.cc`, read from the code)."],
       src: [
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Disassembly of the stock firmware's rumble code", ""]
       ]
     },
@@ -1065,11 +1174,14 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [-10.5, 7.5],
+      pos: [-21.9, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "A two-wire bus to the small helper chips: fuel gauge, charger, audio, USB-C controller.",
       tech: ["`0x55` fuel gauge (also in the stock image), `0x1a` audio codec, `0x3b` headset detect, `0x47` USB-C port controller, `0x6b` charger."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Disassembly of the stock firmware's rumble code", ""]]
+      src: [
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+        ["Disassembly of the stock firmware's rumble code", ""]
+      ]
     },
     {
       id: "soc_i2c2",
@@ -1077,11 +1189,11 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [-6.4, 7.5],
+      pos: [-17.8, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "A second two-wire bus, for the LED driver.",
       tech: ["`0x30` LED driver."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "soc_lpuart1",
@@ -1089,11 +1201,11 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [-2.3, 7.5],
+      pos: [-13.7, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "Serial port for debug text (LPUART1).",
-      tech: ["115200 baud (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["115200 baud (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "soc_lpuart3",
@@ -1101,11 +1213,11 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [1.8, 7.5],
+      pos: [-9.6, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "Serial link to the Bluetooth part of the radio (LPUART3).",
       tech: ["Hardware flow control, up to 4 Mbaud."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "soc_usdhc",
@@ -1113,11 +1225,11 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [5.9, 7.5],
+      pos: [-5.5, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "Fast link to the Wi-Fi part of the radio (USDHC1).",
       tech: ["At most 50 MHz ('backplane writes fail above ~100 MHz or with DDR')."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "soc_sai",
@@ -1125,11 +1237,11 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "inferred",
-      pos: [10, 7.5],
+      pos: [-1.4, 8.7],
       size: [3.2, 0.8, 2.4],
       one: "Digital audio link to the codec.",
-      tech: ["With master clock out (board description)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      tech: ["With master clock out (from that devicetree)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "ram_logger",
@@ -1137,7 +1249,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc_dtcm",
       mark: "static",
-      pos: [-6.8, -4.6],
+      pos: [-18.2, -3.4],
       size: [1.8, 0.4, 1.7],
       range: [0x200262C8, 0x200263FF],
       one: "The firmware's log hub: every log line is handed to up to three listeners ('sinks') registered here.",
@@ -1153,7 +1265,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc_dtcm",
       mark: "static",
-      pos: [-4.8, -4.6],
+      pos: [-16.2, -3.4],
       size: [1.8, 0.4, 1.7],
       range: [0x20029F20, 0x20029F23],
       one: "How far a stick must move before it counts: 12.5 % of the travel on the stock firmware.",
@@ -1166,7 +1278,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc_dtcm",
       mark: "static",
-      pos: [-2.8, -4.6],
+      pos: [-14.2, -3.4],
       size: [1.8, 0.4, 1.7],
       range: [0x2002F384, 0x2002F39B],
       one: "The cleaned-up stick and trigger positions, with full 12-bit detail, before they are cut to 8 bits for the report.",
@@ -1179,7 +1291,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc_dtcm",
       mark: "static",
-      pos: [-0.8, -4.6],
+      pos: [-12.2, -3.4],
       size: [1.8, 0.4, 1.7],
       range: [0x200357A8, 0x2003675B],
       one: "The stock firmware's own stopwatch log of input events, in microseconds. No stock USB request returns it; reading it needed a diagnostic patch.",
@@ -1195,7 +1307,7 @@ window.BOARD_DATA = {
       kind: "mem",
       parent: "soc_ocram",
       mark: "static",
-      pos: [6, -3.5],
+      pos: [-7.8, -2.3],
       size: [8.2, 0.4, 3.4],
       range: [0x20200000, 0x2027FFFF],
       one: "Memory the firmware hands out while it runs.",
@@ -1239,8 +1351,11 @@ window.BOARD_DATA = {
       ghost: true,
       range: [0x60002000, 0x60005FFF],
       one: "No description covers this range. The board's flashloader cannot even write the first half of it.",
-      tech: ["`0x2000`-`0x5fff`: no entry in the board description; the flashloader write whitelist has its hole at `0x2000`-`0x3fff`."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Tested on the board with its own signed flashloader", ""]]
+      tech: ["`0x2000`-`0x5fff`: no entry in that devicetree; the flashloader write whitelist has its hole at `0x2000`-`0x3fff`."],
+      src: [
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+        ["Tested on the board with its own signed flashloader", ""]
+      ]
     },
     {
       id: "fl_crash",
@@ -1249,9 +1364,9 @@ window.BOARD_DATA = {
       parent: "flash",
       mark: "inferred",
       range: [0x60006000, 0x60027FFF],
-      one: "Space for crash reports, according to an outside board description. Not checked here.",
-      tech: ["`0x06000`-`0x27fff`, 'JSON crash logs' (board description), inside an area labelled 'encrypted'."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      one: "Space for crash reports, according to a devicetree for this controller from an open-source RTOS port (not all of it checked on the board). Not checked here.",
+      tech: ["`0x06000`-`0x27fff`, 'JSON crash logs' (from that devicetree), inside an area labelled 'encrypted'."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "fl_kvuser",
@@ -1261,9 +1376,9 @@ window.BOARD_DATA = {
       mark: "inferred",
       range: [0x60028000, 0x6002FFFF],
       one: "User settings, as key-value records. The range is in use; what exactly is in it was not read.",
-      tech: ["`0x28000`-`0x2ffff` (32 KB); range in use on this board, label 'user configuration' from the board description."],
+      tech: ["`0x28000`-`0x2ffff` (32 KB); range in use on this board, label 'user configuration' from that devicetree."],
       src: [
-        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""],
         ["Tested on the board (flash dumps compared before and after)", ""]
       ]
     },
@@ -1278,11 +1393,11 @@ window.BOARD_DATA = {
       one: "In one test a boot erased the records here. What they are is disputed.",
       tech: [
         "`0x34000`: the original backup had content here, and it was blank after a boot. With the content written back, one 12 s boot erased it again (one test, `cycle_check.py`, on a board carrying the restart patch); with the sector blank, boots left it blank. Why the content survived earlier boots is not known.",
-        "Strings in the firmware call it the tombstone (crash log) partition; the board description has no entry for `0x30000`-`0x37fff`."
+        "Strings in the firmware call it the tombstone (crash log) partition; that devicetree has no entry for `0x30000`-`0x37fff`."
       ],
       src: [
         ["Tested on the board (flash dumps compared before and after)", ""],
-        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
         ["Disassembly of the bootloader; open points", ""]
       ]
     },
@@ -1293,9 +1408,9 @@ window.BOARD_DATA = {
       parent: "flash",
       mark: "inferred",
       range: [0x60038000, 0x6003BFFF],
-      one: "Read-only factory data about the device (board description).",
-      tech: ["`0x38000`-`0x3bfff` (16 KB) 'immutable device metadata, read-only' (board description). The range `0x38000`-`0x3ffff` is in use (confirmed)."],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+      one: "Read-only factory data about the device (from that devicetree).",
+      tech: ["`0x38000`-`0x3bfff` (16 KB) 'immutable device metadata, read-only' (from that devicetree). The range `0x38000`-`0x3ffff` is in use (confirmed)."],
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
     },
     {
       id: "fl_kvboot",
@@ -1310,7 +1425,10 @@ window.BOARD_DATA = {
         "Four 4 KB sectors, each with a 16-byte header; content not readable in the raw backup or through `memread.py`.",
         "Claimed: `AppAMeta` / `AppBMeta` records (hash, state, retries)."
       ],
-      src: [["Disassembly of the bootloader; open points", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
+      src: [
+        ["Disassembly of the bootloader; open points", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
+      ]
     },
     {
       id: "fl_slota",
@@ -1346,12 +1464,12 @@ window.BOARD_DATA = {
       ghost: true,
       disputed: true,
       range: [0x60820000, 0x6083FFFF],
-      one: "The outside board description lists a second bootloader here; on this board the range reads blank.",
+      one: "A devicetree for this controller from an open-source RTOS port (not all of it checked on the board) lists a second bootloader here; on this board the range reads blank.",
       tech: [
-        "Board description: second bootloader partition at `0x820000`, 128 KB.",
+        "Devicetree: second bootloader partition at `0x820000`, 128 KB.",
         "Dump: used ranges are `0x800000`-`0x81ffff` and `0x840000`-`0xbdffff`; this range is blank."
       ],
-      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Flash dump of the board", ""]]
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""], ["Flash dump of the board", ""]]
     },
     {
       id: "fl_slotb",
@@ -1749,8 +1867,8 @@ window.BOARD_DATA = {
       label: "PC USB host",
       kind: "pc",
       mark: "measured",
-      pos: [38.5, 0],
-      size: [4.6, 1.2, 8],
+      pos: [0, -31.8],
+      size: [8, 1.2, 4.6],
       one: "The PC's USB port. It asks the board for new data every 4 ms: that wait is most of the delay from button to game.",
       tech: [
         "Polls the interrupt endpoints at the descriptor's interval: byte `06` = 4 ms at high speed.",
@@ -1763,8 +1881,8 @@ window.BOARD_DATA = {
       label: "WinUSB",
       kind: "pc",
       mark: "measured",
-      pos: [45, -12],
-      size: [5, 0.8, 3],
+      pos: [-12, -38.3],
+      size: [3, 0.8, 5],
       one: "Windows' generic USB driver, which the firmware's own descriptor set asks for on the vendor interface; the tools use it there. The chip's download-mode device needs a WinUSB/libusb binding set up on the PC.",
       tech: [
         "The firmware's own descriptor set asks Windows for WinUSB on interface 0.",
@@ -1781,8 +1899,8 @@ window.BOARD_DATA = {
       label: "HID driver",
       kind: "pc",
       mark: "measured",
-      pos: [45, -6.5],
-      size: [5, 0.8, 3],
+      pos: [-6.5, -38.3],
+      size: [3, 0.8, 5],
       one: "Windows' built-in driver for HID devices: it takes the board's gamepad interface, and later the flashloader.",
       tech: [
         "On USB the stock firmware is a plain HID gamepad: input report 3 (10 bytes), output report 5 (rumble). Report descriptor 164 bytes, read from the running firmware.",
@@ -1800,8 +1918,8 @@ window.BOARD_DATA = {
       label: "Games (generic HID gamepad)",
       kind: "pc",
       mark: "inferred",
-      pos: [59, -1],
-      size: [5, 0.8, 3],
+      pos: [-1, -52.3],
+      size: [3, 0.8, 5],
       one: "Games that read generic HID gamepads can use the board. Games that only support one console maker's controller interface ignore it or need a helper on the PC.",
       tech: ["On USB the stock firmware is a plain HID gamepad."],
       src: [["USB descriptors of the stock firmware, read from the board and its flash dump", ""]]
@@ -1811,8 +1929,8 @@ window.BOARD_DATA = {
       label: "sdp_load / flashloader / read_nor_ip",
       kind: "tool",
       mark: "measured",
-      pos: [52, -15.5],
-      size: [5, 0.8, 2.6],
+      pos: [-15.5, -45.3],
+      size: [2.6, 0.8, 5],
       one: "Python tools for the chip's download mode and the board's signed flashloader: load the helper, read registers, erase, write and slowly read the flash.",
       tech: ["`sdp.py`, `sdp_read.py` (fuse and status registers), `sdp_load.py`, `flashloader.py`, `read_nor_ip.py`."],
       src: [["The tool itself", ""]]
@@ -1822,8 +1940,8 @@ window.BOARD_DATA = {
       label: "enter_sdp.py",
       kind: "tool",
       mark: "measured",
-      pos: [59, -15.5],
-      size: [5, 0.8, 2.6],
+      pos: [-15.5, -52.3],
+      size: [2.6, 0.8, 5],
       one: "One USB request to the running firmware drops the board into the download mode.",
       tech: ["Class request `0x21` / `0xC0` to interface 0. Measured: download mode on USB 0.5 s later."],
       src: [["Disassembly of the stock firmware; the request was sent to the board", ""]]
@@ -1834,7 +1952,7 @@ window.BOARD_DATA = {
       kind: "fuse",
       parent: "soc_ocotp",
       mark: "measured",
-      pos: [-4, -15],
+      pos: [-15.4, -13.8],
       size: [1.8, 0.45, 1.3],
       range: [0x401F4400, 0x401F4403],
       one: "The bit that makes the ROM's config byte 0x33: fuse word 0x400, bit 31, the field-return bit. It is burned (1). The word's value before the burn was not recorded.",
@@ -1855,8 +1973,8 @@ window.BOARD_DATA = {
       label: "vendor_bulk.py",
       kind: "tool",
       mark: "measured",
-      pos: [65.5, -15.5],
-      size: [5, 0.8, 2.6],
+      pos: [-15.5, -58.8],
+      size: [2.6, 0.8, 5],
       one: "Starts the firmware's vendor USB task and asks for the unlock challenge, which shows that the channel is locked.",
       tech: [
         "Request `0x8b` starts the task; `0x8c` reads its state (running, unlock mask 0); the bulk challenge answers state 2.",
@@ -1869,8 +1987,8 @@ window.BOARD_DATA = {
       label: "rumble_gui / latency_gui",
       kind: "tool",
       mark: "measured",
-      pos: [59, -10],
-      size: [5, 0.8, 2.6],
+      pos: [-10, -52.3],
+      size: [2.6, 0.8, 5],
       one: "Two small windows: one sends the rumble report, the other times the board's input reports.",
       tech: [
         "Talk to the HID gamepad interface through hidapi.",
@@ -1975,7 +2093,7 @@ window.BOARD_DATA = {
       label: "Maker's device-configuration service (remote)",
       kind: "net",
       mark: "single",
-      pos: [30, -24],
+      pos: [44, -27],
       size: [7, 1, 3],
       one: "A server on the internet that the firmware can ask which update track this device is on. Known only from the code; nothing was sent to it, and whether it still answers is not known.",
       tech: [
@@ -1990,7 +2108,7 @@ window.BOARD_DATA = {
       kind: "chip",
       parent: "soc",
       mark: "general",
-      pos: [9.6, -9.5],
+      pos: [-1.8, -8.3],
       size: [3.2, 0.8, 2.4],
       range: [0x400FC000, 0x400FFFFF],
       one: "The chip's clock and power controller. One of its bits switches on the supply that fuse programming needs.",
@@ -2151,10 +2269,10 @@ window.BOARD_DATA = {
       steps: [
         {
           t: "A map of the board",
-          cap: "This is a schematic map of a game controller's circuit board, built from hands-on reverse engineering of one board. Blocks are parts that were identified; their positions are not the real layout.",
+          cap: "This is a map of a game controller's circuit board, built from hands-on reverse engineering of one board. The main parts sit where photos of the board show them; parts the photos do not place sit in a row between the sticks or stand around the board.",
           focus: ["soc", "flash", "lstick", "rstick", "btn_face", "usb_c", "battery"],
           tech: "Drag to orbit, right-drag to pan, scroll to zoom toward the cursor. Click any block for its plain-language summary, technical details and how each fact is known.",
-          src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+          src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
         },
         {
           t: "Every claim has a mark",
@@ -2162,7 +2280,7 @@ window.BOARD_DATA = {
           nodes: ["unk_combo", "unk_power", "unk_clock", "btn_power"],
           focus: ["unk_combo", "unk_power", "unk_clock", "btn_power", "uart_pads"],
           tech: "Use 'Layers' to show only measured facts.",
-          src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
+          src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]]
         },
         {
           t: "The processor",
@@ -2188,7 +2306,9 @@ window.BOARD_DATA = {
           focus: ["fl_slota", "fl_slotb", "fl_boot", "fl_fcb"],
           open: ["flash"],
           tech: "Tiny regions get a minimum thickness so they stay clickable; true sizes are in each block's details.",
-          src: [["Third-party board description of this hardware, matched against the board's own firmware", ""]]
+          src: [
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""]
+          ]
         },
         {
           t: "The software layer",
@@ -2297,7 +2417,7 @@ window.BOARD_DATA = {
           flows: [["fw_bl_reset", "fw_sdp"]],
           mark: "measured",
           tech: "Jump to the ROM HAB failsafe entry (RVT +0x28). Cause not established. One untested idea is a memory-split setting left over from earlier code; the bootloader itself writes its split only after this jump.",
-          src: [["Tested on the board with a test program", ""], ["Inference from the third-party board description", ""]]
+          src: [["Tested on the board with a test program", ""], ["Inference from that devicetree", ""]]
         },
         {
           t: "Set up memory, watchdogs off",
@@ -2553,9 +2673,9 @@ window.BOARD_DATA = {
           open: ["soc"],
           rt: "contact bounce: up to 13 edges in 0.1 ms",
           mark: "measured",
-          tech: "GPIO2_IO00, pull-up, active low (pin from the board description). Bounce shows as several interrupt marks within 0.1 ms; the report is built from the first sample. Measured through the memory-read diagnostic patch (trace ring).",
+          tech: "GPIO2_IO00, pull-up, active low (pin from that devicetree). Bounce shows as several interrupt marks within 0.1 ms; the report is built from the first sample. Measured through the memory-read diagnostic patch (trace ring).",
           src: [
-            ["Third-party board description of this hardware (not all checked on the board)", ""],
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
             ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
           ]
         },
@@ -2616,10 +2736,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           rt: "+0-4 ms to the next sample",
           mark: "measured",
-          tech: "HID buttons 14, 15, 19, 20: no isr mark; picked up by the timer sample. Two of them may be the triggers reported as buttons (an inference from the board description). Measured through the memory-read diagnostic patch (trace ring).",
+          tech: "HID buttons 14, 15, 19, 20: no isr mark; picked up by the timer sample. Two of them may be the triggers reported as buttons (an inference from that devicetree). Measured through the memory-read diagnostic patch (trace ring).",
           src: [
             ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""],
-            ["Third-party board description of this hardware (not all checked on the board)", ""]
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
           ]
         }
       ]
@@ -2636,8 +2756,11 @@ window.BOARD_DATA = {
           flows: [["lstick", "soc_adc"], ["soc_gpio", "hall_pwr", "lstick"]],
           open: ["soc"],
           mark: "static",
-          tech: "Left X = ADC1 channel 11, Y = 12. One 12-bit sample per axis, no averaging. Sensor supply switched by GPIO2_IO10 (board description).",
-          src: [["Disassembly of the stock firmware's stick code", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
+          tech: "Left X = ADC1 channel 11, Y = 12. One 12-bit sample per axis, no averaging. Sensor supply switched by GPIO2_IO10 (from that devicetree).",
+          src: [
+            ["Disassembly of the stock firmware's stick code", ""],
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
+          ]
         },
         {
           t: "Every 4 ms",
@@ -2740,10 +2863,10 @@ window.BOARD_DATA = {
           flows: [["fw_haptics", "soc_pwm", "motor_l"], ["fw_haptics", "soc_pwm", "motor_r"]],
           open: ["soc"],
           mark: "measured",
-          tech: "FlexPWM4 submodules 2 and 3 (board description). Which motor is which was not recorded.",
+          tech: "FlexPWM4 submodules 2 and 3 (from that devicetree). Which motor is which was not recorded.",
           src: [
             ["Disassembly of the stock firmware's rumble code", ""],
-            ["Third-party board description of this hardware, matched against the board's own firmware", ""]
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board), matched against the board's own firmware", ""]
           ]
         }
       ]
@@ -2814,11 +2937,11 @@ window.BOARD_DATA = {
           flows: [["fw_logger", "soc_lpuart1", "uart_pads"]],
           open: ["soc"],
           mark: "static",
-          tech: "LPUART1, 115200 baud (board description). The UART log is not gated by the DF flag.",
+          tech: "LPUART1, 115200 baud (from that devicetree). The UART log is not gated by the DF flag.",
           src: [
             ["Disassembly of the stock firmware, single reading, not independently verified", ""],
-            ["Third-party board description of this hardware (not all checked on the board)", ""],
-            ["Inference from the third-party board description", ""]
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""],
+            ["Inference from that devicetree", ""]
           ]
         },
         {
@@ -2894,7 +3017,7 @@ window.BOARD_DATA = {
           tech: "Update checker 0x6085431c: table 0x60abb3a4 -> 'df-' and 'qa-' (0x60abb81a); loop 0x608543ae-0x608543f4 with memcmp 0x60aaef50 (case-sensitive prefix test); write of 1 under key 0x1c at 0x608543ee. Re-checked against the image. The flag sits in store 0 with the user settings; that this is the 0x28000 flash range is an inference.",
           src: [
             ["Disassembly of the stock firmware, re-checked against the image", ""],
-            ["Third-party board description of this hardware (not all checked on the board)", ""]
+            ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
           ]
         },
         {
@@ -3024,15 +3147,19 @@ window.BOARD_DATA = {
     {
       title: "A second bootloader region at 0x820000?",
       nodes: ["fl_boot2"],
-      src: [["Third-party board description", ""], ["Flash dump of the board", ""]],
-      text: "A third-party board description lists a second bootloader region at 0x820000 (128 KB). The board's flash dump shows that range blank: the used ranges end at 0x81ffff.",
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""], ["Flash dump of the board", ""]],
+      text: "A devicetree for this controller from an open-source RTOS port (not all of it checked on the board) lists a second bootloader region at 0x820000 (128 KB). The board's flash dump shows that range blank: the used ranges end at 0x81ffff.",
       shown: "See-through flash layer with a question mark."
     },
     {
       title: "What are the records at 0x34000?",
       nodes: ["fl_rec", "fl_crash", "fl_kvboot"],
-      src: [["Flash dumps compared across boots", ""], ["Strings in the stock firmware", ""], ["Third-party board description", ""]],
-      text: "On the board, the original flash dump had records at 0x34000; in one test a boot erased content written back there, while a blank sector stayed blank, and why the content survived earlier boots is not known. Strings in the firmware call the area a crash log ('tombstone'), while the board description has no entry for 0x30000-0x37fff and places crash logs at 0x6000-0x27fff. What the records are is open.",
+      src: [
+        ["Flash dumps compared across boots", ""],
+        ["Strings in the stock firmware", ""],
+        ["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]
+      ],
+      text: "On the board, the original flash dump had records at 0x34000; in one test a boot erased content written back there, while a blank sector stayed blank, and why the content survived earlier boots is not known. Strings in the firmware call the area a crash log ('tombstone'), while that devicetree has no entry for 0x30000-0x37fff and places crash logs at 0x6000-0x27fff. What the records are is open.",
       shown: "Flash layer marked measured (the behaviour), with a warning sign for its purpose."
     },
     {
@@ -3045,9 +3172,9 @@ window.BOARD_DATA = {
     {
       title: "What sensors are in the sticks?",
       nodes: ["lstick", "rstick", "hall_pwr"],
-      src: [["Third-party board description", ""]],
-      text: "The board description switches a supply for hall-effect sensors; the sensor type was not checked on the board.",
-      shown: "Stick details say 'per board description'; the supply switch is marked inferred."
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]],
+      text: "That devicetree switches a supply for hall-effect sensors; the sensor type was not checked on the board.",
+      shown: "Stick details say 'per that devicetree'; the supply switch is marked inferred."
     },
     {
       title: "DTCM: 512 KB or 480 KB?",
@@ -3057,11 +3184,11 @@ window.BOARD_DATA = {
       shown: "Drawn as 480 KB, with both numbers in the details."
     },
     {
-      title: "Power, clocks and physical layout",
-      nodes: ["unk_power", "unk_clock"],
-      src: [["Open question", ""]],
-      text: "How battery and USB power become the chip's supply voltages, where the clocks come from, and where the parts sit on the board are not known.",
-      shown: "See-through blocks; positions on the map are schematic."
+      title: "Power, clocks and parts without a place",
+      nodes: ["unk_power", "unk_clock", "unk_wavechip", "unk_flexcon", "unk_wire3"],
+      src: [["Open question", ""], ["Photos of the board", ""]],
+      text: "Positions of the main parts are now taken from photos of the board. Still not identified: how battery and USB power become the chip's supply voltages and which chips are the regulators, where the remaining parts sit (fuel gauge, LED driver, USB-C port controller, audio codec, debug pads, power button), what the connectors go to, and the crystal frequencies.",
+      shown: "See-through blocks for what the photos show but nothing identifies; blocks whose place is not identified sit in a row between the sticks."
     },
     {
       title: "Which buttons and pins?",
@@ -3080,8 +3207,8 @@ window.BOARD_DATA = {
     {
       title: "How is the cable detected?",
       nodes: ["usb_c", "usb_pd"],
-      src: [["Third-party board description", ""]],
-      text: "How the board notices a USB cable is not known; the USB-C port controller is only named in comments of the board description.",
+      src: [["A devicetree for this controller from an open-source RTOS port (not all of it checked on the board)", ""]],
+      text: "How the board notices a USB cable is not known; the USB-C port controller is only named in comments of that devicetree.",
       shown: "The plug-in scenario says so in its first step."
     },
     {
@@ -7720,19 +7847,19 @@ void main() {
 
     // board slab, PC island, software plane
     boardMat = new T.MeshStandardMaterial({ color: '#123a30', roughness: 0.8, metalness: 0.05 });
-    const board = new T.Mesh(new T.RoundedBoxGeometry(60, 1, 38, 3, 1.2), boardMat);
-    board.position.set(-4, -0.5, 0); scene.add(board);
-    boardGrid = new T.Mesh(new T.PlaneGeometry(60, 38), new T.MeshBasicMaterial({ transparent: true, depthWrite: false }));
-    boardGrid.rotation.x = -Math.PI / 2; boardGrid.position.set(-4, 0.01, 0); scene.add(boardGrid);
+    const board = new T.Mesh(new T.RoundedBoxGeometry(80, 1, 35.5, 3, 1.2), boardMat);
+    board.position.set(0, -0.5, 0); scene.add(board);
+    boardGrid = new T.Mesh(new T.PlaneGeometry(80, 35.5), new T.MeshBasicMaterial({ transparent: true, depthWrite: false }));
+    boardGrid.rotation.x = -Math.PI / 2; boardGrid.position.set(0, 0.01, 0); scene.add(boardGrid);
     islandMat = new T.MeshStandardMaterial({ color: '#181d33', roughness: 0.85, metalness: 0.05 });
     const island = new T.Mesh(new T.RoundedBoxGeometry(36, 1, 36, 3, 1.2), islandMat);
-    island.position.set(52, -0.5, 0); scene.add(island);
+    island.position.set(0, -0.5, -45.3); scene.add(island);
     islandGrid = new T.Mesh(new T.PlaneGeometry(36, 36), new T.MeshBasicMaterial({ transparent: true, depthWrite: false }));
-    islandGrid.rotation.x = -Math.PI / 2; islandGrid.position.set(52, 0.01, 0); scene.add(islandGrid);
+    islandGrid.rotation.x = -Math.PI / 2; islandGrid.position.set(0, 0.01, -45.3); scene.add(islandGrid);
     planeMat = new T.MeshBasicMaterial({ color: '#1fb6d5', transparent: true, opacity: 0.045, depthWrite: false, side: T.DoubleSide });
-    const plane = new T.Mesh(new T.PlaneGeometry(60, 38), planeMat);
-    plane.rotation.x = -Math.PI / 2; plane.position.set(-4, G.FW_Y - 0.02, 0); plane.renderOrder = -1; scene.add(plane);
-    planeEdge = new T.LineSegments(new T.EdgesGeometry(new T.PlaneGeometry(60, 38)), new T.LineBasicMaterial({ color: '#1fb6d5', transparent: true, opacity: 0.35 }));
+    const plane = new T.Mesh(new T.PlaneGeometry(80, 35.5), planeMat);
+    plane.rotation.x = -Math.PI / 2; plane.position.set(0, G.FW_Y - 0.02, 0); plane.renderOrder = -1; scene.add(plane);
+    planeEdge = new T.LineSegments(new T.EdgesGeometry(new T.PlaneGeometry(80, 35.5)), new T.LineBasicMaterial({ color: '#1fb6d5', transparent: true, opacity: 0.35 }));
     planeEdge.rotation.x = -Math.PI / 2; planeEdge.position.copy(plane.position); scene.add(planeEdge);
     G.plane = plane;
 
@@ -7760,7 +7887,7 @@ void main() {
 
   function cableCurve() {
     return new T.CatmullRomCurve3([
-      new V3(26.0, 0.6, 0), new V3(28.3, 0.35, 0.3), new V3(30.5, -2.2, 1.4), new V3(33.0, -0.6, 0.6), new V3(36.3, 0.6, 0)
+      new V3(0, 0.6, -18.2), new V3(0.3, 0.35, -20.5), new V3(1.4, -2.2, -22.7), new V3(0.6, -0.6, -25.2), new V3(0, 0.6, -27.5)
     ]);
   }
 
@@ -7982,11 +8109,11 @@ void main() {
       const el = doc.createElement('div'); el.className = 'lbl region'; el.textContent = text; labelsEl.appendChild(el);
       regionLabels.push({ el, pos: new V3(...pos), show, side, _lx: null });
     };
-    mk('Board · hardware', [-33, 0.4, 19.6], () => state.layers.hw, 'r');
-    mk('Software layer · code running on the chip', [-33, G.FW_Y, -19.6], () => state.layers.fw, 'r');
-    mk('Windows PC', [35, 0.4, 18.6], () => state.layers.pc, 'r');
-    mk('Inside the processor', [-12.5, G.EXP_Y, 10.4], () => state.layers.hw && state.socE > 0.6, 'r');
-    mk('Flash contents · 16 MB, sizes to scale (tiny parts enlarged)', [-20.8, G.FL_TOP + 0.6, -9.3], () => state.layers.hw && state.flashE > 0.6, 'r');
+    mk('Board · hardware', [-39, 0.4, 19.6], () => state.layers.hw, 'r');
+    mk('Software layer · code running on the chip', [-39, G.FW_Y, -19], () => state.layers.fw, 'r');
+    mk('Windows PC', [-17.5, 0.4, -62.5], () => state.layers.pc, 'r');
+    mk('Inside the processor', [-23.9, G.EXP_Y, 11.6], () => state.layers.hw && state.socE > 0.6, 'r');
+    mk('Flash contents · 16 MB, sizes to scale (tiny parts enlarged)', [-23.8, G.FL_TOP + 0.6, 4.8], () => state.layers.hw && state.flashE > 0.6, 'r');
   }
   function measureLabels() {
     NODES.forEach(n => { const el = n._label; el.style.display = 'block'; el.style.transform = 'translate(-9999px,0)'; });
@@ -8293,7 +8420,7 @@ void main() {
     const tgt = c.clone().addScaledVector(right, -shiftX).addScaledVector(up, -shiftY);
     flyTo(tgt, tgt.clone().addScaledVector(dir, dist), opt.dur);
   }
-  const HOME = { t: [12, 6, 0], p: [-4, 70, 86] };
+  const HOME = { t: [0, 2, 2], p: [0, 88, 62] };
   function resetView() {
     if (state.mode === '2d') { Map2D.reset(); return; }
     const ins = panelInsets();
@@ -8335,19 +8462,21 @@ void main() {
       for (const n of NODES) {
         const L = LAY.get(n.id), r = OPENER.get(n.id);
         let x, y, w, h;
-        if (r === 'flash') { w = L.band ? 10.6 : 10; h = L.h / flTop * 38; x = -47; y = 19 - (L.y - G.FL_Y0) / flTop * 38; }
-        else if (r === 'soc') { x = L.x; y = L.z + 46; w = L.w; h = L.d; }
+        if (r === 'flash') { w = L.band ? 10.6 : 10; h = L.h / flTop * 38; x = -52; y = 19 - (L.y - G.FL_Y0) / flTop * 38; }
+        else if (r === 'soc') { x = L.x; y = L.z + 72; w = L.w; h = L.d; }
         else if (layerOf(n) === 'fw') { x = L.x; y = L.z - 44; w = L.w; h = L.d; }
+        else if (layerOf(n) === 'pc') { x = 70 + (-45.3 - L.z); y = L.x; w = L.d; h = L.w; }
+        else if (n.kind === 'net') { x = 70 + (-45.3 - L.z); y = L.x; w = L.d; h = L.w; }
         else { x = L.x; y = L.z; w = L.w; h = L.d; }
         POS.set(n.id, { x, y, w, h });
       }
     }
     function build() {
       svg = $('#map2d'); layout();
-      vb0 = { x: -56, y: -66, w: 130, h: 128 }; vb = Object.assign({}, vb0);
+      vb0 = { x: -64, y: -68, w: 160, h: 160 }; vb = Object.assign({}, vb0);
       const regions = [
-        ['Software layer', -35, -64, 62, 40], ['Board · hardware', -35, -20, 62, 40], ['Inside the processor', -14, 28, 30, 30],
-        ['Flash · 16 MB', -53, -20, 12, 40], ['Windows PC', 33, -20, 39, 40]
+        ['Software layer', -41, -62, 82, 36], ['Board · hardware', -41, -18, 82, 36], ['Inside the processor', -25, 54, 30, 30],
+        ['Flash · 16 MB', -59, -20, 12, 40], ['Windows PC', 52, -20, 38, 40]
       ];
       const gR = mk('g', {}, svg);
       regions.forEach(([t, x, y, w, h]) => { const g = mk('g', { class: 'region' }, gR); mk('rect', { x, y, width: w, height: h, rx: 1.2 }, g); mk('text', { x: x + 0.8, y: y + 2 }, g).textContent = t; });
@@ -8819,7 +8948,7 @@ void main() {
     </table>
     <h4>What you are looking at</h4>
     <p>The bottom slab is the board, the slab across the cable the PC. The glowing plane above the board is the software: each block hangs by a dashed thread from where its code is stored. The processor and the flash chip open up (Layers → Open up, or click them). Packets are coloured by signal type (Legend).</p>
-    <p>Positions are schematic. Each block's mark says how a fact is known: <b>measured</b> on the board, <b>static</b> (read from the firmware or the boot ROM), <b>single reading</b> (read from the firmware once, not independently verified), <b>inferred</b>, <b>general</b> chip knowledge, or <b>unknown</b>. Open questions are listed under “Gaps &amp; conflicts”.</p><h4>What this page is based on</h4><p>Hands-on reverse engineering of one board: flash dumps, disassembly of the boot ROM, bootloader and firmware, and measurements over USB, some of them with a small diagnostic patch (the steps say which). Pin assignments marked 'board description' come from a third-party description of this hardware.</p>
+    <p>Positions of the main parts follow photos of the board; parts the photos do not place are arranged schematically. Each block's mark says how a fact is known: <b>measured</b> on the board, <b>static</b> (read from the firmware or the boot ROM), <b>single reading</b> (read from the firmware once, not independently verified), <b>inferred</b>, <b>general</b> chip knowledge, or <b>unknown</b>. Open questions are listed under “Gaps &amp; conflicts”.</p><h4>What this page is based on</h4><p>Hands-on reverse engineering of one board: flash dumps, disassembly of the boot ROM, bootloader and firmware, and measurements over USB, some of them with a small diagnostic patch (the steps say which). Pin assignments marked '(from that devicetree)' come from a devicetree for this controller from an open-source RTOS port, not all of it checked on the board.</p>
     <h4>Credits</h4><p class="small muted">Rendering: three.js r187 (MIT licence, included in this file). No network access: everything is inside this one file.</p>`));
 
   /* ----- welcome ----- */
@@ -8845,7 +8974,7 @@ void main() {
     chipMats.forEach(m => m.color.set(P.chip));
     if (boardGrid.material.map) boardGrid.material.map.dispose();
     if (islandGrid.material.map) islandGrid.material.map.dispose();
-    boardGrid.material.map = gridTexture(60, 38, 2, P.grid, P.edge); boardGrid.material.needsUpdate = true;
+    boardGrid.material.map = gridTexture(80, 35.5, 2, P.grid, P.edge); boardGrid.material.needsUpdate = true;
     islandGrid.material.map = gridTexture(36, 36, 2, P.igrid, P.iedge); islandGrid.material.needsUpdate = true;
     refreshBlending();
     needsRender = true;
