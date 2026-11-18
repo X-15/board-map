@@ -252,22 +252,22 @@ table.keys td { padding: 3px 10px 3px 0; vertical-align: top; }
    reads only this object. Generated from the full edition by a filter step.
 
    nodes[]     blocks: id, label, kind, mark (evidence), one (plain one-liner), tech (details),
-               src ([note file, section]), pos/size (scene units), parent (opens with), host
-               (where software lives), range (addresses), ghost (notes silent or disputed)
+               src (how each fact is known), pos/size (scene units), parent (opens with), host
+               (where software lives), range (addresses), ghost (unknown or disputed)
    edges[]     signal paths: id, from, to, sig (signal kind), label, mark
    scenarios[] steps: t, cap (plain caption), tech, rt (real time), mark, src, flows (node
                ids a packet travels through; each hop is an edge), nodes, focus, open, seq
-   issues[]    where the notes are silent or disagree, and how the map shows it
+   issues[]    open questions and disagreements between observations, and how the map shows them
    ===================================================================================== */
 window.BOARD_DATA = {
   version: "2026-11-18 (stock edition)",
-  about: "Schematic map of the board as shipped with one change, a burned field-return fuse bit. Built from a private research notebook; positions on the board are schematic.",
+  about: "Schematic map of one game controller board as shipped, with one change: a burned field-return fuse bit. Built from hands-on reverse engineering of that board (flash dumps, disassembly, measurements over USB); positions on the board are schematic.",
   marks: {
     measured: { label: "measured / tested on the board", short: "measured", color: "#22b573" },
     static: { label: "read from the firmware (static analysis)", short: "static", color: "#3d86ff" },
     single: { label: "read from the firmware, single reading, not independently verified", short: "single reading", color: "#8fa8ff" },
     inferred: { label: "inferred / not verified", short: "inferred", color: "#e39b1b" },
-    unknown: { label: "unknown: the notes are silent or disagree", short: "unknown", color: "#8b919b" },
+    unknown: { label: "unknown, or two observations disagree", short: "unknown", color: "#8b919b" },
     general: { label: "general chip knowledge, not checked on this board", short: "general", color: "#a26bf0" }
   },
   kinds: {
@@ -310,11 +310,15 @@ window.BOARD_DATA = {
       one: "The brain of the board: one chip with the CPU core, all of its working memory and the circuits that talk to buttons, sticks, USB and everything else. Open it to look inside.",
       tech: [
         "RT1060 family, part RT1062: one Cortex-M7 core, Thumb-2 code.",
-        "Boot ROM at `0x00200000`; the notes' ROM addresses are for one ROM image (HAB 4.3.7).",
+        "Boot ROM at `0x00200000`; the ROM addresses here are for one ROM image (HAB 4.3.7).",
         "Internal RAM only: the MPU and heap tables use the chip's own 1 MB; nothing references the external-memory controller.",
         "Secure boot: shipped closed. On this board one fuse bit (field return) is burned, so the ROM's trust check no longer blocks images. See the fuse box inside."
       ],
-      src: [["README.md", "Target"], ["hardware.md", "Confirmed here"], ["firmware/README.md", "What the binaries show"]]
+      src: [
+        ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Flash dump of the board and disassembly of the stock firmware image", ""]
+      ]
     },
     {
       id: "flash",
@@ -332,7 +336,11 @@ window.BOARD_DATA = {
         "Device ID read as `0x17c8` (16 MB).",
         "A full 16 MB copy was read out over USB for the analysis; the contents shown here are the image as shipped."
       ],
-      src: [["flashloader.md", "Flash detect / configure; NOR writes are allowed"], ["hardware.md", "Confirmed here"], ["firmware/README.md", "Images"]]
+      src: [
+        ["Tested on the board with its own signed flashloader", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Flash dump of the board", ""]
+      ]
     },
     {
       id: "radio",
@@ -349,7 +357,11 @@ window.BOARD_DATA = {
         "Radio driver strings are in the stock image (confirmed); the wiring is from the board description (not checked).",
         "The stock app holds a Bluetooth gamepad mode (HID over GATT) that is present and switched off; not traced."
       ],
-      src: [["hardware.md", "Other devices; Confirmed here"], ["log.md", "2026-11-16, Input latency over USB"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Measured on the board: input-report timing over USB", ""]
+      ]
     },
     {
       id: "lstick",
@@ -364,9 +376,13 @@ window.BOARD_DATA = {
         "ADC1 channel 11 = X, 12 = Y (traced in the code). Press (L3): GPIO1_IO00 (board description).",
         "Calibration stored on this board (ADC counts 0..4095): X min 868, centre band 2184-2224, max 3333; Y 813 / 1970-2035 / 3275. Read from RAM through the memory-read diagnostic patch.",
         "Stock 8-bit values, interactive test: rest exactly 0, no wobble; range 98-100 % in all four directions; rests after letting go within 0.9 %; rim 0.5 % off a circle; 252 distinct values on a slow sweep. Measured through a modified USB interface that passed the stock 8-bit values on.",
-        "Sensor type: hall-effect according to the board description; see the open issue about this."
+        "Sensor type: hall-effect according to the board description; not checked on the board."
       ],
-      src: [["sticks.md", "What the stock firmware does; This board (2026-11-17)"], ["hardware.md", "Analog inputs; Buttons"]]
+      src: [
+        ["Disassembly of the stock firmware's stick code", ""],
+        ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""]
+      ]
     },
     {
       id: "rstick",
@@ -382,7 +398,10 @@ window.BOARD_DATA = {
         "Calibration stored on this board: X 844 / 2091-2141 / 3261; Y 891 / 1998-2065 / 3258. Read from RAM through the memory-read diagnostic patch.",
         "Stock 8-bit values, interactive test: rest exactly 0; range 99-100 %; rests within 1.1 %; rim 0.5 % off a circle; 255 distinct values on a slow sweep. Measured through a modified USB interface that passed the stock 8-bit values on."
       ],
-      src: [["sticks.md", "This board"], ["hardware.md", "Analog inputs"]]
+      src: [
+        ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""]
+      ]
     },
     {
       id: "trig_l",
@@ -395,10 +414,14 @@ window.BOARD_DATA = {
       one: "An analog trigger: the firmware reads how far it is pulled, not just on or off.",
       tech: [
         "ADC1 channel 13, 32-sample hardware averaging (sticks: none).",
-        "Both triggers read raw 739 / 685 at rest and 1744 / 1731 pressed (as listed in the notes; read from RAM with a diagnostic patch).",
+        "Both triggers read raw 739 / 685 at rest and 1744 / 1731 pressed (read from RAM with a diagnostic patch).",
         "Stock report: 13-point curve, then 409..3891 maps to 0..255 (a tenth of dead travel at each end)."
       ],
-      src: [["sticks.md", "What the stock firmware does; This board"], ["hardware.md", "Analog inputs"]]
+      src: [
+        ["Disassembly of the stock firmware's stick code", ""],
+        ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""]
+      ]
     },
     {
       id: "trig_r",
@@ -410,7 +433,7 @@ window.BOARD_DATA = {
       size: [4, 1.6, 2.6],
       one: "The right analog trigger, read like the left one.",
       tech: ["ADC1 channel 8, 32-sample averaging.", "Triggers have no pin interrupt: they are only seen by the 4 ms timed sample."],
-      src: [["sticks.md", "What the stock firmware does"], ["hardware.md", "Analog inputs"]]
+      src: [["Disassembly of the stock firmware's stick code", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "dpad",
@@ -425,7 +448,10 @@ window.BOARD_DATA = {
         "Up / down / left / right: GPIO3_IO00-03, pull-up, active low (board description, not checked).",
         "The d-pad buttons raise a pin interrupt. Measured through the memory-read diagnostic patch (trace ring)."
       ],
-      src: [["hardware.md", "Buttons"], ["usb-diagnostics.md", "Measured: where a press spends its time"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
+      ]
     },
     {
       id: "btn_face",
@@ -440,7 +466,10 @@ window.BOARD_DATA = {
         "A GPIO2_IO00, B GPIO2_IO01, X GPIO2_IO02, Y GPIO2_IO03; pull-up, active low (board description).",
         "Pin interrupt -> sample 20-30 us, sample -> report built 250-300 us. Measured through the memory-read diagnostic patch (trace ring)."
       ],
-      src: [["hardware.md", "Buttons"], ["usb-diagnostics.md", "Measured: where a press spends its time"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
+      ]
     },
     {
       id: "btn_menu",
@@ -452,7 +481,7 @@ window.BOARD_DATA = {
       size: [4, 0.5, 1.6],
       one: "The two small buttons in the middle.",
       tech: ["options GPIO2_IO12, menu GPIO2_IO13 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "btn_home",
@@ -464,7 +493,7 @@ window.BOARD_DATA = {
       size: [2, 0.6, 2],
       one: "The logo button.",
       tech: ["GPIO2_IO11 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "btn_assistant",
@@ -476,7 +505,7 @@ window.BOARD_DATA = {
       size: [1.8, 0.5, 1.8],
       one: "One of the extra buttons in the middle of the board.",
       tech: ["GPIO2_IO14 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "btn_capture",
@@ -488,7 +517,7 @@ window.BOARD_DATA = {
       size: [1.8, 0.5, 1.8],
       one: "Another extra button in the middle of the board.",
       tech: ["GPIO2_IO15 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "btn_l1",
@@ -500,7 +529,7 @@ window.BOARD_DATA = {
       size: [5, 0.8, 2],
       one: "The left shoulder button.",
       tech: ["GPIO4_IO00 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "btn_r1",
@@ -512,7 +541,7 @@ window.BOARD_DATA = {
       size: [5, 0.8, 2],
       one: "The right shoulder button.",
       tech: ["GPIO4_IO01 (board description)."],
-      src: [["hardware.md", "Buttons"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "usb_c",
@@ -528,7 +557,11 @@ window.BOARD_DATA = {
         "Device and host mode are declared in the board description; only device mode is used.",
         "The board runs on its battery: a replug does not restart it."
       ],
-      src: [["hardware.md", "Other devices"], ["usb-diagnostics.md", "Where the 4 ms polling interval is set"], ["status.md", "Known pitfalls"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["USB descriptors read from the running board and from its flash dump", ""],
+        ["Experience with the board", ""]
+      ]
     },
     {
       id: "usb_pd",
@@ -538,9 +571,9 @@ window.BOARD_DATA = {
       shape: "box",
       pos: [19.5, 5],
       size: [2.4, 0.6, 2.4],
-      one: "A small chip that handles the USB-C port. Only named in comments of the board description; nothing in the notes uses it.",
+      one: "A small chip that handles the USB-C port. Only named in comments of the board description; nothing in this map uses it.",
       tech: ["I2C1 address `0x47` (named only in comments)."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "charger",
@@ -556,7 +589,11 @@ window.BOARD_DATA = {
         "The charger driver logs its fast-charge setting ('fastcharge set to 960'); the line was seen in the firmware's log, read with a diagnostic change.",
         "Vendor request `0x80` disables charging from USB (read from the code, not sent)."
       ],
-      src: [["hardware.md", "Other devices"], ["firmware-log.md", "Tested (2026-11-17)"], ["enter-sdp.md", "The other requests of that handler"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["The firmware's own log, read over USB with a diagnostic change", ""],
+        ["Disassembly of the stock firmware; the request was sent to the board", ""]
+      ]
     },
     {
       id: "battery",
@@ -569,10 +606,10 @@ window.BOARD_DATA = {
       one: "Keeps the board running even when the USB cable is pulled. That is why a replug does not restart the board.",
       tech: [
         "Label (read by the owner): 3.8 V nominal, 2000 mAh, 7.6 Wh.",
-        "Firmware table: 3400 mV empty; 4350 mV is the charge voltage of such a cell (general knowledge, noted as such in the notes).",
+        "Firmware table: 3400 mV empty; 4350 mV is the charge voltage of such a cell (general knowledge about such cells).",
         "Pitfall: fully power down before expecting a clean download-mode entry; a USB replug does not restart the board."
       ],
-      src: [["rumble.md", "From report value to motor drive"], ["status.md", "Known pitfalls"]]
+      src: [["Disassembly of the stock firmware's rumble code", ""], ["Experience with the board", ""]]
     },
     {
       id: "fuel_gauge",
@@ -589,7 +626,11 @@ window.BOARD_DATA = {
         "Interrupt on GPIO2_IO28 (board description).",
         "This board's battery voltage was never read (no USB request returns it)."
       ],
-      src: [["rumble.md", "From report value to motor drive"], ["hardware.md", "Confirmed here; Other devices"]]
+      src: [
+        ["Disassembly of the stock firmware's rumble code", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""]
+      ]
     },
     {
       id: "motor_l",
@@ -605,7 +646,12 @@ window.BOARD_DATA = {
         "Which motor is big or small: not recorded.",
         "Rated voltage and driver current limit: not known; the firmware drives as if the battery were always 3.4 V."
       ],
-      src: [["rumble.md", "The report; Not known"], ["hardware.md", "Confirmed here"], ["log.md", "Vibration motors from the PC"]]
+      src: [
+        ["HID report descriptor read from the running board", ""],
+        ["Open points", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Tested on the board: rumble reports sent from the PC", ""]
+      ]
     },
     {
       id: "motor_r",
@@ -617,7 +663,10 @@ window.BOARD_DATA = {
       size: [3, 3, 5],
       one: "The second vibration motor.",
       tech: ["Same drive path as motor 1. Which is which is not recorded."],
-      src: [["rumble.md", "The report"], ["hardware.md", "Confirmed here"]]
+      src: [
+        ["HID report descriptor read from the running board", ""],
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""]
+      ]
     },
     {
       id: "audio",
@@ -632,7 +681,10 @@ window.BOARD_DATA = {
         "Codec at I2C1 `0x1a`, audio on SAI1 with master clock out; headset-jack detection at `0x3b` (comments).",
         "The stock app has a second USB configuration with 5 interfaces including USB audio; this board reports the 2-interface one."
       ],
-      src: [["hardware.md", "Other devices"], ["xinput.md", "Limits and open points"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["USB descriptors of the stock firmware, read from the board and its flash dump", ""]
+      ]
     },
     {
       id: "led_driver",
@@ -644,7 +696,7 @@ window.BOARD_DATA = {
       size: [2.2, 0.5, 2.2],
       one: "Drives the board's lights.",
       tech: ["I2C2 address `0x30` (board description)."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "hall_pwr",
@@ -656,7 +708,7 @@ window.BOARD_DATA = {
       size: [2, 0.5, 2],
       one: "A pin that switches the power for the stick sensors on and off.",
       tech: ["GPIO2_IO10, active low: 'a supply for the hall-effect sensors' (board description, not checked). Which sensors it feeds is not listed."],
-      src: [["hardware.md", "Analog inputs"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "uart_pads",
@@ -671,7 +723,12 @@ window.BOARD_DATA = {
         "LPUART1, 115200 baud, TX on pad GPIO_AD_B0_12, RX on GPIO_AD_B0_13 (board description).",
         "UART logging is gated by a development fuse and the setting `LogToUart` (`0x45`, default 0)."
       ],
-      src: [["hardware.md", "Other devices; What follows for this repo"], ["df-device.md", "Who reads it"], ["usb-diagnostics.md", "Stock routes checked"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Inference from the third-party board description", ""],
+        ["Disassembly of the stock firmware, single reading, not independently verified", ""],
+        ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]
+      ]
     },
     {
       id: "btn_power",
@@ -682,11 +739,8 @@ window.BOARD_DATA = {
       pos: [-31, -8],
       size: [2, 0.8, 2],
       one: "The board's own button. It switches the board on; held while powering on, it opens the chip's USB download mode (SDP), the recovery door that always works.",
-      tech: [
-        "Used many times: after a full power-down, hold it while powering on -> ROM SDP.",
-        "Which pin it is and how the boot ROM sees it is not in the notes."
-      ],
-      src: [["sdp.md", "intro"], ["status.md", "Known pitfalls"], ["log.md", "Recovery path"]]
+      tech: ["Used many times: after a full power-down, hold it while powering on -> ROM SDP.", "Which pin it is and how the boot ROM sees it is not known."],
+      src: [["The chip's USB download mode, used on the board", ""], ["Experience with the board", ""], ["Used on the board for recovery", ""]]
     },
     {
       id: "unk_combo",
@@ -702,7 +756,7 @@ window.BOARD_DATA = {
         "Board init (`board.cc`, `0x6088a29c`): five GPIO inputs; four reading 0 and the fifth non-zero -> reboot into the BootROM.",
         "Pins and buttons: not worked out."
       ],
-      src: [["enter-sdp.md", "How it was found; Not known"]]
+      src: [["Disassembly of the stock firmware", ""]]
     },
     {
       id: "unk_power",
@@ -713,9 +767,9 @@ window.BOARD_DATA = {
       shape: "ghost",
       pos: [-21, 15.5],
       size: [5, 0.6, 3.4],
-      one: "How battery and USB power become the chip's supply voltages is not described anywhere in the notes.",
-      tech: ["Notes silent."],
-      src: [["hardware.md", "(not covered)"]]
+      one: "How battery and USB power become the chip's supply voltages is not known.",
+      tech: ["Not documented."],
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "unk_clock",
@@ -726,9 +780,9 @@ window.BOARD_DATA = {
       shape: "ghost",
       pos: [-9, -14.5],
       size: [2.4, 0.5, 1.6],
-      one: "Crystals and clock setup are not in the notes. Known: the timer the firmware uses ticks at 75 MHz.",
-      tech: ["Notes silent on crystals / PLL setup.", "GPT2 runs at 75 MHz (read from the running firmware)."],
-      src: [["usb-diagnostics.md", "Measured: where a press spends its time"]]
+      one: "Crystals and clock setup are not known. Known: the timer the firmware uses ticks at 75 MHz.",
+      tech: ["Not known: crystals and clock (PLL) setup.", "GPT2 runs at 75 MHz (read from the running firmware)."],
+      src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
     },
     {
       id: "soc_rom",
@@ -744,7 +798,11 @@ window.BOARD_DATA = {
         "ROM base `0x00200000`; HAB vector table at `0x00200300`; ROM API tree at `0x0020001c` (FlexSPI driver at `0x00201a60`).",
         "SDP command loop `sdp_usb_run` at `0x20ef7c`."
       ],
-      src: [["README.md", "Conventions"], ["bootrom-image-auth.md", "The HAB RVT"], ["flexspi-nor.md", "ROM FlexSPI API"]]
+      src: [
+        ["Boot ROM of this chip revision (HAB 4.3.7), disassembled", ""],
+        ["Disassembly of the boot ROM", ""],
+        ["Disassembly of the boot ROM and the board's flash configuration block", ""]
+      ]
     },
     {
       id: "soc_ocotp",
@@ -760,33 +818,35 @@ window.BOARD_DATA = {
         "Fuse word `0x400`, bit 31 (shadow register `0x401F4400`): set. The word reads `0xc0b28c03`, confirmed after a real power cycle, so it is the fuse itself and not a temporary override.",
         "SEC_CONFIG is still closed (`SRC_SBMR2 = 0x13`); the ROM tests the field-return bit first, so the bit decides.",
         "A burned fuse cannot be cleared.",
-        "Per the notes it also disables the device-key material used for encrypted images (not tested).",
-        "How the bit is burned, as the notes describe it: scenario 'Burning the config fuse'."
+        "Burning it also disables the device-key material used for encrypted images (not tested).",
+        "How the bit is burned: scenario 'Burning the config fuse'."
       ],
       src: [
-        ["config-fuse.md", "hab_get_config; Effect; Programming word 0x400 bit 31"],
-        ["status.md", "Done / confirmed"],
-        ["README.md", "Target"],
-        ["nor-boot-image.md", "A development (unsigned) image"]
+        ["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""],
+        ["Disassembly of the boot ROM", ""],
+        ["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""],
+        ["Read back from the chip and tested on the board", ""],
+        ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""],
+        ["Flash dump of the board and the boot ROM's image checks", ""]
       ]
     },
     {
       id: "soc_src",
-      label: "Reset controller notes (SRC_GPR5-7)",
+      label: "Reset controller scratch registers (SRC_GPR5-7)",
       kind: "chip",
       parent: "soc",
       mark: "measured",
       pos: [0.5, -15],
       size: [3.2, 0.8, 2.4],
       range: [0x400F8030, 0x400F803B],
-      one: "Three small registers that survive a restart. Bootloader and firmware leave each other notes in them: 'boot slot A', 'go to download mode', 'boot failed'.",
+      one: "Three small registers that survive a restart. Bootloader and firmware leave each other messages in them: 'boot slot A', 'go to download mode', 'boot failed'.",
       tech: [
         "`SRC_GPR6` (`0x400F8034`): boot request. 1 = ROM download mode, 2 = slot A, 3 = slot B.",
         "`SRC_GPR7`: bootloader marks a failed slot (`0x10` A, `0x20` B).",
         "`SRC_GPR5`: firmware -> bootloader events: 1 failed, 2 passed, 3/4/5 switch to A / B / recovery.",
         "They survive a software reset and are cleared by a full power-down (measured on the owner's board with a test program)."
       ],
-      src: [["bootloader.md", "Reset handler; boot_app; How the application sends those events"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""]]
     },
     {
       id: "soc_iomuxc",
@@ -802,7 +862,11 @@ window.BOARD_DATA = {
         "Fuse default would be 256 KB OCRAM, 128 KB DTCM, 128 KB ITCM (board description).",
         "Not reset when going to SDP from the bootloader: a suspected reason why the flashloader fails from that route (untested)."
       ],
-      src: [["bootloader.md", "boot_app"], ["hardware.md", "FlexRAM default layout; What follows for this repo"]]
+      src: [
+        ["Disassembly of the bootloader from the board's flash dump", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Inference from the third-party board description", ""]
+      ]
     },
     {
       id: "soc_wdog",
@@ -814,7 +878,7 @@ window.BOARD_DATA = {
       size: [3, 0.8, 2.4],
       one: "Safety timers that would restart a frozen chip. Both bootloader and firmware switch them off, so a hard hang stays hung until power-off.",
       tech: ["Application start-up `0x60843ad4`-`0x60843b12` disables WDOG1 and WDOG2 and unlocks and disables RTWDOG; the bootloader does the same."],
-      src: [["restart-command.md", "Findings"]]
+      src: [["Disassembly of the stock firmware", ""]]
     },
     {
       id: "soc_core",
@@ -829,7 +893,7 @@ window.BOARD_DATA = {
         "Cortex-M7, Thumb-2 code; ROM, bootloader and firmware all execute in place from flash.",
         "USB control requests run directly in the USB interrupt (USB_OTG1 vector `0x60863a38`), not in a task."
       ],
-      src: [["README.md", "Conventions"], ["restart-command.md", "Findings"]]
+      src: [["Boot ROM of this chip revision (HAB 4.3.7), disassembled", ""], ["Disassembly of the stock firmware", ""]]
     },
     {
       id: "soc_gpt",
@@ -845,7 +909,7 @@ window.BOARD_DATA = {
         "GPT2 at `0x401F0000`, 75 MHz, 32-bit counter with a software high word; rolls over every 57.3 s.",
         "The clock rate and the rollover were read from the running firmware with a diagnostic patch."
       ],
-      src: [["usb-diagnostics.md", "Measured: where a press spends its time"]]
+      src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
     },
     {
       id: "soc_itcm",
@@ -861,7 +925,10 @@ window.BOARD_DATA = {
         "32 KB with the bootloader's FlexRAM split (MPU table: ITCM `0x0`, 32 KB).",
         "Address 0 holds a guard pattern `0xdeaddead` (seen when a vendor-type request returned it)."
       ],
-      src: [["firmware/README.md", "What the binaries show"], ["enter-sdp.md", "The request"]]
+      src: [
+        ["Flash dump of the board and disassembly of the stock firmware image", ""],
+        ["Disassembly of the stock firmware; the request was sent to the board", ""]
+      ]
     },
     {
       id: "soc_dtcm",
@@ -879,7 +946,11 @@ window.BOARD_DATA = {
         "The flashloader is loaded to `0x20000000` when it runs.",
         "The MPU table lists DTCM as 512 KB; the FlexRAM split gives 480 KB (see issues)."
       ],
-      src: [["bootloader.md", "boot_app"], ["firmware/README.md", "What the binaries show"], ["usb-diagnostics.md", "Limits"]]
+      src: [
+        ["Disassembly of the bootloader from the board's flash dump", ""],
+        ["Flash dump of the board and disassembly of the stock firmware image", ""],
+        ["Disassembly of the stock firmware", ""]
+      ]
     },
     {
       id: "soc_ocram",
@@ -895,7 +966,7 @@ window.BOARD_DATA = {
         "`0x20200000`, 512 KB. Heap block `0x20200000` + `0x80000` (heap table `0x60bcbdd4`).",
         "Free-heap counter 568072 bytes on the running board (read with a diagnostic patch), fits the 612 KB of both heap blocks."
       ],
-      src: [["firmware/README.md", "What the binaries show"]]
+      src: [["Flash dump of the board and disassembly of the stock firmware image", ""]]
     },
     {
       id: "soc_flexspi",
@@ -911,7 +982,7 @@ window.BOARD_DATA = {
         "`0x402A8000`. Set up from the FCB at boot, or by the ROM API (`get_config` + `init`, option word `0xC0000206`).",
         "The restricted flashloader allows only a few of its registers."
       ],
-      src: [["flexspi-nor.md", "all"], ["flashloader.md", "This flashloader is memory-access-restricted"]]
+      src: [["Disassembly of the boot ROM and the board's flash configuration block", ""], ["Tested on the board with its own signed flashloader", ""]]
     },
     {
       id: "soc_usb",
@@ -928,7 +999,11 @@ window.BOARD_DATA = {
         "Endpoints: HID interrupt IN `0x83` / OUT `0x03`; vendor bulk `0x87` / `0x07`; control endpoint 0.",
         "Control requests run directly in the USB interrupt."
       ],
-      src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set; Stock routes checked"], ["restart-command.md", "Findings"]]
+      src: [
+        ["USB descriptors read from the running board and from its flash dump", ""],
+        ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""],
+        ["Disassembly of the stock firmware", ""]
+      ]
     },
     {
       id: "soc_adc",
@@ -940,7 +1015,7 @@ window.BOARD_DATA = {
       size: [3, 0.8, 2.6],
       one: "Turns the stick and trigger sensor voltages into numbers from 0 to 4095.",
       tech: ["Channels: RT 8, RX 9, RY 10, LX 11, LY 12, LT 13.", "Read routine `0x60860dfe`: sticks one sample, no averaging; triggers 32-sample averaging."],
-      src: [["sticks.md", "What the stock firmware does"]]
+      src: [["Disassembly of the stock firmware's stick code", ""]]
     },
     {
       id: "soc_gpio",
@@ -956,7 +1031,10 @@ window.BOARD_DATA = {
         "Pin interrupt -> sample starts in 20-30 us. Measured through the memory-read diagnostic patch (trace ring).",
         "Four HID buttons (14, 15, 19, 20) come without an interrupt; which physical buttons they are is not mapped."
       ],
-      src: [["hardware.md", "Buttons"], ["usb-diagnostics.md", "Measured"]]
+      src: [
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
+      ]
     },
     {
       id: "soc_pwm",
@@ -968,7 +1046,10 @@ window.BOARD_DATA = {
       size: [3.4, 0.8, 2.6],
       one: "Switches the motor power on and off very fast; the on-share (duty) sets the vibration strength.",
       tech: ["Two outputs, submodules 2 and 3 (board description).", "The PWM driver rejects duty outside 0-100 % (`pwm.cc`, read from the code)."],
-      src: [["hardware.md", "Confirmed here"], ["rumble.md", "From report value to motor drive"]]
+      src: [
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Disassembly of the stock firmware's rumble code", ""]
+      ]
     },
     {
       id: "soc_i2c1",
@@ -980,7 +1061,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "A two-wire bus to the small helper chips: fuel gauge, charger, audio, USB-C controller.",
       tech: ["`0x55` fuel gauge (also in the stock image), `0x1a` audio codec, `0x3b` headset detect, `0x47` USB-C port controller, `0x6b` charger."],
-      src: [["hardware.md", "Other devices"], ["rumble.md", "From report value to motor drive"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Disassembly of the stock firmware's rumble code", ""]]
     },
     {
       id: "soc_i2c2",
@@ -992,7 +1073,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "A second two-wire bus, for the LED driver.",
       tech: ["`0x30` LED driver."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "soc_lpuart1",
@@ -1004,7 +1085,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "Serial port for debug text (LPUART1).",
       tech: ["115200 baud (board description)."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "soc_lpuart3",
@@ -1016,7 +1097,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "Serial link to the Bluetooth part of the radio (LPUART3).",
       tech: ["Hardware flow control, up to 4 Mbaud."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "soc_usdhc",
@@ -1028,7 +1109,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "Fast link to the Wi-Fi part of the radio (USDHC1).",
       tech: ["At most 50 MHz ('backplane writes fail above ~100 MHz or with DDR')."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "soc_sai",
@@ -1040,7 +1121,7 @@ window.BOARD_DATA = {
       size: [3.2, 0.8, 2.4],
       one: "Digital audio link to the codec.",
       tech: ["With master clock out (board description)."],
-      src: [["hardware.md", "Other devices"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "ram_logger",
@@ -1056,7 +1137,7 @@ window.BOARD_DATA = {
         "`0x200262c8`; three slots of (trampoline `0x6084ef6f`, argument) at `+0x104`; a free slot holds `0x6084ef6d`.",
         "The firmware fills two; the third is for streaming the log over USB, which only happens on an unlocked vendor channel."
       ],
-      src: [["firmware-log.md", "section on the logger's three sink slots"], ["usb-diagnostics.md", "Stock routes checked"]]
+      src: [["Disassembly of the stock firmware's logger", ""], ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
     },
     {
       id: "ram_deadzone",
@@ -1069,7 +1150,7 @@ window.BOARD_DATA = {
       range: [0x20029F20, 0x20029F23],
       one: "How far a stick must move before it counts: 12.5 % of the travel on the stock firmware.",
       tech: ["Float `DeadzoneLength` at `0x20029f20`, read on every sample; stock value 0.125."],
-      src: [["sticks.md", "What the stock firmware does"]]
+      src: [["Disassembly of the stock firmware's stick code", ""]]
     },
     {
       id: "ram_calib",
@@ -1082,7 +1163,7 @@ window.BOARD_DATA = {
       range: [0x2002F384, 0x2002F39B],
       one: "The cleaned-up stick and trigger positions, with full 12-bit detail, before they are cut to 8 bits for the report.",
       tech: ["`0x2002f384`: LX, LY, RX, RY, LT, RT as int32, 0..4096, centre 2048, up and right high."],
-      src: [["sticks.md", "What the stock firmware does"]]
+      src: [["Disassembly of the stock firmware's stick code", ""]]
     },
     {
       id: "ram_trace",
@@ -1098,7 +1179,7 @@ window.BOARD_DATA = {
         "Ring `0x200357b8`: 500 entries of 8 bytes; write index `0x200357a8`; enable flag `0x20000bb0` (= 1 on the running board); wrapped flag `0x20036758`.",
         "Idle it covers about 130 ms (one cycle every 4 ms)."
       ],
-      src: [["usb-diagnostics.md", "The event ring (static); Stock routes checked"]]
+      src: [["Disassembly of the stock firmware", ""], ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
     },
     {
       id: "ram_heap",
@@ -1111,7 +1192,7 @@ window.BOARD_DATA = {
       range: [0x20200000, 0x2027FFFF],
       one: "Memory the firmware hands out while it runs.",
       tech: ["Heap table at `0x60bcbdd4`: block `0x20200000` + `0x80000`."],
-      src: [["firmware/README.md", "What the binaries show"]]
+      src: [["Flash dump of the board and disassembly of the stock firmware image", ""]]
     },
     {
       id: "fl_fcb",
@@ -1125,7 +1206,7 @@ window.BOARD_DATA = {
         "512 bytes at offset 0, tag `FCFB`; version `0x56010400`, readSampleClk 1, csHold 3, csSetup 3.",
         "The board's own FCB is the exact match for its chip; keep it for own images."
       ],
-      src: [["flexspi-nor.md", "FCB"], ["nor-boot-image.md", "Layout at 0x60000000"]]
+      src: [["Disassembly of the boot ROM and the board's flash configuration block", ""], ["Flash dump of the board and the boot ROM's image checks", ""]]
     },
     {
       id: "fl_ivt",
@@ -1139,7 +1220,7 @@ window.BOARD_DATA = {
         "Header `0x412000d1`, entry `0x60801000` (bootloader), boot_data `0x60001020` {`0x60000000`, 16 MB, 0}.",
         "Signature (CSF) pointer at flash `0x1018`: `0x60818000`, as shipped."
       ],
-      src: [["nor-boot-image.md", "Layout at 0x60000000"], ["bootloader.md", "intro"]]
+      src: [["Flash dump of the board and the boot ROM's image checks", ""], ["Disassembly of the bootloader from the board's flash dump", ""]]
     },
     {
       id: "fl_gap",
@@ -1151,7 +1232,7 @@ window.BOARD_DATA = {
       range: [0x60002000, 0x60005FFF],
       one: "No description covers this range. The board's flashloader cannot even write the first half of it.",
       tech: ["`0x2000`-`0x5fff`: no entry in the board description; the flashloader write whitelist has its hole at `0x2000`-`0x3fff`."],
-      src: [["hardware.md", "Flash partitions below slot A"], ["flashloader.md", "the write list"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Tested on the board with its own signed flashloader", ""]]
     },
     {
       id: "fl_crash",
@@ -1162,7 +1243,7 @@ window.BOARD_DATA = {
       range: [0x60006000, 0x60027FFF],
       one: "Space for crash reports, according to an outside board description. Not checked here.",
       tech: ["`0x06000`-`0x27fff`, 'JSON crash logs' (board description), inside an area labelled 'encrypted'."],
-      src: [["hardware.md", "Flash partitions below slot A"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "fl_kvuser",
@@ -1172,8 +1253,11 @@ window.BOARD_DATA = {
       mark: "inferred",
       range: [0x60028000, 0x6002FFFF],
       one: "User settings, as key-value records. The range is in use; what exactly is in it was not read.",
-      tech: ["`0x28000`-`0x2ffff` (32 KB); range confirmed by this notebook, label 'user configuration' from the board description."],
-      src: [["hardware.md", "Confirmed here"], ["restart-command.md", "Result"]]
+      tech: ["`0x28000`-`0x2ffff` (32 KB); range in use on this board, label 'user configuration' from the board description."],
+      src: [
+        ["Third-party board description of this hardware, matched against the board's own firmware", ""],
+        ["Tested on the board (flash dumps compared before and after)", ""]
+      ]
     },
     {
       id: "fl_rec",
@@ -1183,12 +1267,16 @@ window.BOARD_DATA = {
       mark: "measured",
       disputed: true,
       range: [0x60030000, 0x60037FFF],
-      one: "The firmware writes and then erases records here at every start. What they are is disputed in the notes.",
+      one: "The firmware writes and then erases records here at every start. What they are is disputed.",
       tech: [
         "`0x34000`: content in the backup, blank after a boot; written back, one 12 s boot erased it again (measured, `cycle_check.py`).",
-        "By its strings 'the tombstone (crash log) partition' (restart-command.md); the board description has no entry for `0x30000`-`0x37fff`."
+        "Strings in the firmware call it the tombstone (crash log) partition; the board description has no entry for `0x30000`-`0x37fff`."
       ],
-      src: [["restart-command.md", "Result"], ["hardware.md", "Open against this repo"], ["bootloader.md", "Not known"]]
+      src: [
+        ["Tested on the board (flash dumps compared before and after)", ""],
+        ["Third-party board description of this hardware (not all checked on the board)", ""],
+        ["Disassembly of the bootloader; open points", ""]
+      ]
     },
     {
       id: "fl_kvfactory",
@@ -1199,7 +1287,7 @@ window.BOARD_DATA = {
       range: [0x60038000, 0x6003BFFF],
       one: "Read-only factory data about the device (board description).",
       tech: ["`0x38000`-`0x3bfff` (16 KB) 'immutable device metadata, read-only' (board description). The range `0x38000`-`0x3ffff` is in use (confirmed)."],
-      src: [["hardware.md", "Flash partitions below slot A"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "fl_kvboot",
@@ -1209,12 +1297,12 @@ window.BOARD_DATA = {
       mark: "inferred",
       disputed: true,
       range: [0x6003C000, 0x6003FFFF],
-      one: "Probably where the bootloader keeps its notes about each slot. An outside reader says so; this repo could not confirm it.",
+      one: "Probably where the bootloader keeps its records about each slot. Another researcher says so; it could not be confirmed on this board.",
       tech: [
         "Four 4 KB sectors, each with a 16-byte header; content not readable in the raw backup or through `memread.py`.",
         "Claimed: `AppAMeta` / `AppBMeta` records (hash, state, retries)."
       ],
-      src: [["bootloader.md", "Not known"], ["hardware.md", "Flash partitions below slot A"]]
+      src: [["Disassembly of the bootloader; open points", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
       id: "fl_slota",
@@ -1225,7 +1313,7 @@ window.BOARD_DATA = {
       range: [0x60040000, 0x607FFFFF],
       one: "The first of two places for a firmware. Empty on this board. A tiny test program ran from here once and was erased.",
       tech: ["`0x040000`, size `0x7c0000` (8 MB - 256 KB). Reads blank.", "A second application image (not on this board) is linked for this slot."],
-      src: [["bootloader.md", "Slots"], ["firmware/README.md", "intro"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Flash dump of the board and disassembly of the stock firmware image", ""]]
     },
     {
       id: "fl_boot",
@@ -1239,7 +1327,7 @@ window.BOARD_DATA = {
         "Own IVT at `0x60800000` (still with CSF `0x60818000`), vector table `0x60801000` (SP `0x20078000`, reset `0x608015b5`).",
         "Code `0x60800000`-`0x60819fff`; used range up to `0x81ffff`."
       ],
-      src: [["bootloader.md", "intro"], ["log.md", "Stock layout seen so far"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Flash dump of the board", ""]]
     },
     {
       id: "fl_boot2",
@@ -1255,7 +1343,7 @@ window.BOARD_DATA = {
         "Board description: second bootloader partition at `0x820000`, 128 KB.",
         "Dump: used ranges are `0x800000`-`0x81ffff` and `0x840000`-`0xbdffff`; this range is blank."
       ],
-      src: [["hardware.md", "Flash partitions below slot A"], ["status.md", "Open"]]
+      src: [["Third-party board description of this hardware (not all checked on the board)", ""], ["Flash dump of the board", ""]]
     },
     {
       id: "fl_slotb",
@@ -1269,7 +1357,7 @@ window.BOARD_DATA = {
         "`0x840000`, size `0x7c0000`. Image `0x60840000`-`0x60bd2967` with its own signature (IVT `0x60bd1000`, CSF `0x60bd1030`).",
         "The rest of the slot is blank."
       ],
-      src: [["firmware/README.md", "Checked against this board's NOR backup; What the binaries show"], ["status.md", "Open"]],
+      src: [["Flash dump of the board and disassembly of the stock firmware image", ""], ["Flash dump of the board", ""]],
       usedTo: 0x60BD2968
     },
     {
@@ -1281,7 +1369,7 @@ window.BOARD_DATA = {
       range: [0x60ACAC7C, 0x60ACADEA],
       one: "The stock firmware's USB self-description, stored in flash. One byte here sets the 4 ms polling interval.",
       tech: ["2-interface configuration `0x60acac7c` (80 bytes; `bInterval` byte for `0x83` at flash `0xacacc4` = `06`); 5-interface one `0x60acaccc`."],
-      src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set"]]
+      src: [["USB descriptors read from the running board and from its flash dump", ""]]
     },
     {
       id: "fw_rom",
@@ -1296,7 +1384,7 @@ window.BOARD_DATA = {
         "Reads FCB (flash `0x0`), IVT (`0x1000`); authenticate path; jump to the IVT entry.",
         "A loaded image must take over for good: returning into the ROM resets the chip."
       ],
-      src: [["nor-boot-image.md", "all"], ["bootrom-image-auth.md", "Note: a JUMP image must take over"]]
+      src: [["Flash dump of the board and the boot ROM's image checks", ""], ["Disassembly of the boot ROM", ""]]
     },
     {
       id: "fw_hab",
@@ -1313,9 +1401,10 @@ window.BOARD_DATA = {
         "Checked by running the ROM's own routine in an emulator with the bit flipped, and on the board: the download mode reports 'not closed' (`0x56787856`) and an unsigned helper loaded over it runs."
       ],
       src: [
-        ["bootrom-image-auth.md", "The finalizer; Consequence"],
-        ["config-fuse.md", "hab_get_config; Effect; Reading the fuse state over SDP"],
-        ["status.md", "Done / confirmed"]
+        ["Disassembly of the boot ROM", ""],
+        ["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""],
+        ["Read from the chip through its USB download mode", ""],
+        ["Read back from the chip and tested on the board", ""]
       ]
     },
     {
@@ -1331,7 +1420,7 @@ window.BOARD_DATA = {
         "HID reports over USB; `READ_REGISTER` (any AHB address, the fuse shadow included), `WRITE_FILE`, `JUMP_ADDRESS`.",
         "Status word `0x56787856` = not closed (`0x12343412` when closed). Needs a WinUSB/libusb binding on Windows."
       ],
-      src: [["sdp.md", "all"]]
+      src: [["The chip's USB download mode, used on the board", ""]]
     },
     {
       id: "fw_flashloader",
@@ -1347,7 +1436,7 @@ window.BOARD_DATA = {
         "Erase one 4 KB sector in 0.07 s; write page-aligned; read through FlexSPI registers, 4 bytes per command (~680 B/s, about 7 hours for 16 MB).",
         "Reset command `0x0b` restarts the chip."
       ],
-      src: [["flashloader.md", "all"], ["reading-flash.md", "1. IP reads through the restricted flashloader"]]
+      src: [["Tested on the board with its own signed flashloader", ""], ["Measured while reading out the board's flash", ""]]
     },
     {
       id: "fw_bl_reset",
@@ -1357,12 +1446,12 @@ window.BOARD_DATA = {
       mark: "measured",
       pos: [-20.5, -14],
       size: [5.6, 0.6, 3],
-      one: "The bootloader's first steps: set up memory, switch off watchdogs, and read the boot request note left in SRC_GPR6.",
+      one: "The bootloader's first steps: set up memory, switch off watchdogs, and read the boot request left in SRC_GPR6.",
       tech: [
         "Reset handler `0x608015b4`: `SRC_GPR6` = 1 -> clear, jump to ROM failsafe entry (download mode); other non-zero -> `boot_app(value)`; 0 -> main.",
         "Writes `IOMUXC_GPR17 = 0xeaaaaaaa`. Requests 1 and 2 were exercised on the owner's board with a test program."
       ],
-      src: [["bootloader.md", "Reset handler: SRC_GPR6 is the boot request"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""]]
     },
     {
       id: "fw_bl_select",
@@ -1378,7 +1467,7 @@ window.BOARD_DATA = {
         "Chooses the active slot; falls back to the backup; 'last ditch' check of both slots once per power-up.",
         "Events from the app arrive through `SRC_GPR5`."
       ],
-      src: [["bootloader.md", "Normal boot: bookkeeping and slot selection"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""]]
     },
     {
       id: "fw_bl_check",
@@ -1394,7 +1483,7 @@ window.BOARD_DATA = {
         "No IVT -> accepted only when the main IVT has no signature pointer. IVT -> ROM HAB entry / authenticate / exit.",
         "With the fuse burned, a test program with a broken signature was accepted and ran (slot A, erased since)."
       ],
-      src: [["bootloader.md", "check_app; Tested"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Tested on the board with a test program", ""]]
     },
     {
       id: "fw_bl_usb",
@@ -1406,7 +1495,7 @@ window.BOARD_DATA = {
       size: [5.6, 0.6, 3],
       one: "If no slot can be started, the bootloader stays and keeps its own USB device alive, then powers off after 300 s.",
       tech: ["'Staying in bootloader'; own descriptor copy at `0x608152be`. Not exercised."],
-      src: [["bootloader.md", "When that gives up"], ["usb-diagnostics.md", "Where the 4 ms polling interval is set"]]
+      src: [["Disassembly of the bootloader from the board's flash dump", ""], ["USB descriptors read from the running board and from its flash dump", ""]]
     },
     {
       id: "fw_app_start",
@@ -1423,7 +1512,7 @@ window.BOARD_DATA = {
         "Reports the boot attempt via `SRC_GPR5` (`1` first, later `2`).",
         "Erases the records at flash `0x34000` (measured)."
       ],
-      src: [["restart-command.md", "Findings"], ["enter-sdp.md", "How it was found"], ["bootloader.md", "How the application sends those events"]]
+      src: [["Disassembly of the stock firmware", ""], ["Disassembly of the bootloader from the board's flash dump", ""]]
     },
     {
       id: "fw_main",
@@ -1438,7 +1527,7 @@ window.BOARD_DATA = {
         "Shutdown routine `0x60859718`; event 5 = orderly restart, 6 = wipe + reset, 7 = wipe + off (reset on USB).",
         "Power-off turns into a reset while USB is connected (read from the code)."
       ],
-      src: [["enter-sdp.md", "Restarting the stock application"]]
+      src: [["Disassembly of the stock firmware", ""]]
     },
     {
       id: "fw_reboot",
@@ -1453,7 +1542,7 @@ window.BOARD_DATA = {
         "`0x60862d60` ('soft reset to the BootROM'). Chip revision `0x6C0000` (this board) -> a ROM function pointer called with `0xEB100000` (taken to be the ROM's enter-bootloader API; pointer not followed). Other revisions: `SRC_GPR6 = 1` + reset.",
         "Measured: SDP on USB 0.5 s after request `0xC0`."
       ],
-      src: [["enter-sdp.md", "How it was found; The request"]]
+      src: [["Disassembly of the stock firmware", ""], ["Disassembly of the stock firmware; the request was sent to the board", ""]]
     },
     {
       id: "fw_kv",
@@ -1470,9 +1559,12 @@ window.BOARD_DATA = {
         "Which flash partition holds key `0x51` is not stated. `IsDfDevice` is in store 0 with the user settings."
       ],
       src: [
-        ["sticks.md", "What the stock firmware does"],
-        ["usb-diagnostics.md", "Stock routes checked; Not known"],
-        ["df-device.md", "What the flag is; Where the track string comes from; Open"]
+        ["Disassembly of the stock firmware's stick code", ""],
+        ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""],
+        ["Disassembly of the stock firmware", ""],
+        ["Disassembly of the stock firmware, re-checked against the image", ""],
+        ["Disassembly of the stock firmware, single reading, not independently verified", ""],
+        ["Open questions from the firmware analysis", ""]
       ]
     },
     {
@@ -1485,7 +1577,7 @@ window.BOARD_DATA = {
       size: [6, 0.6, 3],
       one: "Wireless code: Bluetooth gamepad (present, switched off) and Wi-Fi set-up. Not traced further.",
       tech: ["Strings `HidOverGatt`, `ble_gamepad_`, 'HOGP disabled'. Requests `0xC1`-`0xC4` take and save Wi-Fi credentials."],
-      src: [["log.md", "Input latency over USB"], ["enter-sdp.md", "The other requests"]]
+      src: [["Measured on the board: input-report timing over USB", ""], ["Disassembly of the stock firmware; the request was sent to the board", ""]]
     },
     {
       id: "fw_trace",
@@ -1497,7 +1589,7 @@ window.BOARD_DATA = {
       size: [6, 0.6, 3],
       one: "Writes time-stamped marks (interrupt, timer, sample, report) into the input trace ring.",
       tech: ["`0x60860cc4(type, value, n, ...)`, 20 call sites; names `input`, `input_task`, `sample`, `isr`, `hid`."],
-      src: [["usb-diagnostics.md", "The event ring (static)"]]
+      src: [["Disassembly of the stock firmware", ""]]
     },
     {
       id: "fw_vendor",
@@ -1513,7 +1605,7 @@ window.BOARD_DATA = {
         "`0x80` charging off, `0x81` build number, `0x82` shipping mode, `0x85` bug report, `0x86` factory wipe, `0x87`-`0x8a` strings, `0x8b` start vendor task, `0x8c` its state, `0xC0` reboot to ROM, `0xC1`-`0xC5` Wi-Fi.",
         "Vendor-type requests never reach it (answered with the bytes at address 0)."
       ],
-      src: [["enter-sdp.md", "The other requests of that handler"]]
+      src: [["Disassembly of the stock firmware; the request was sent to the board", ""]]
     },
     {
       id: "fw_vtask",
@@ -1530,7 +1622,10 @@ window.BOARD_DATA = {
         "Exception: a 'DF device' (a fuse bit or the stored flag `IsDfDevice`) takes the challenge itself as the token. This board is not one. How the flag gets set: scenario 'The dogfood flag'.",
         "Once unlocked, the channel can also write any writable key-value entry, `IsDfDevice` included (bulk request field 9). Single reading, not re-checked."
       ],
-      src: [["usb-diagnostics.md", "Stock routes checked"], ["df-device.md", "What the flag is"]]
+      src: [
+        ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""],
+        ["Disassembly of the stock firmware, re-checked against the image", ""]
+      ]
     },
     {
       id: "fw_input",
@@ -1546,7 +1641,7 @@ window.BOARD_DATA = {
         "Pin interrupt starts a sample within 20-30 us; the four buttons without interrupt wait for the timer.",
         "Measured through the memory-read diagnostic patch (trace ring)."
       ],
-      src: [["usb-diagnostics.md", "The event ring; Measured"]]
+      src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
     },
     {
       id: "fw_sticks",
@@ -1561,7 +1656,7 @@ window.BOARD_DATA = {
         "ADC read `0x60860dfe` -> per-axis scaling `0x60852fc0` (±1.0 at 95 % of calibrated travel) -> round dead zone `0x608530d0` -> 0..4096.",
         "For its own report: cut to 8 bits (`0x60852a4e`); triggers through a 13-point curve."
       ],
-      src: [["sticks.md", "What the stock firmware does"]]
+      src: [["Disassembly of the stock firmware's stick code", ""]]
     },
     {
       id: "fw_logger",
@@ -1577,7 +1672,7 @@ window.BOARD_DATA = {
         "Three listener slots; the firmware fills two; the third serves the USB log stream (locked on a shipped unit).",
         "Small replay buffer: the first replay held 44 lines from 63 s of uptime. Measured through the log-unlock diagnostic patch."
       ],
-      src: [["firmware-log.md", "What the stock firmware offers"], ["usb-diagnostics.md", "Stock routes checked"]]
+      src: [["Disassembly of the stock firmware's logger", ""], ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
     },
     {
       id: "fw_power",
@@ -1589,7 +1684,7 @@ window.BOARD_DATA = {
       size: [6, 0.6, 3],
       one: "Talks to the fuel gauge and the charger over I2C.",
       tech: ["Voltage from fuel-gauge register `0x04`; the charger driver logs its fast-charge setting."],
-      src: [["rumble.md", "From report value to motor drive"], ["firmware-log.md", "Tested"]]
+      src: [["Disassembly of the stock firmware's rumble code", ""], ["The firmware's own log, read over USB with a diagnostic change", ""]]
     },
     {
       id: "fw_usbstack",
@@ -1605,7 +1700,7 @@ window.BOARD_DATA = {
         "Interrupt routine `0x6084ae78` -> notification `0x6084a2c0` -> device callback, no queue.",
         "Descriptors are served straight from flash."
       ],
-      src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set"], ["restart-command.md", "Findings"]]
+      src: [["USB descriptors read from the running board and from its flash dump", ""], ["Disassembly of the stock firmware", ""]]
     },
     {
       id: "fw_hid",
@@ -1620,7 +1715,10 @@ window.BOARD_DATA = {
         "Input report 3: byte 1 hat, bytes 2-3 buttons, 8-bit sticks and triggers. Idle: no report (sent on change only).",
         "Output report 5 = rumble (two 16-bit values)."
       ],
-      src: [["usb-diagnostics.md", "What is recorded around a press"], ["rumble.md", "The report"]]
+      src: [
+        ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""],
+        ["HID report descriptor read from the running board", ""]
+      ]
     },
     {
       id: "fw_haptics",
@@ -1636,7 +1734,7 @@ window.BOARD_DATA = {
         "x 3400 mV / battery voltage, capped at 100 %. At 4.35 V a full slider gives 78 % duty.",
         "Gauge read failure -> uncompensated duty."
       ],
-      src: [["rumble.md", "From report value to motor drive"]]
+      src: [["Disassembly of the stock firmware's rumble code", ""]]
     },
     {
       id: "pc_host",
@@ -1650,7 +1748,7 @@ window.BOARD_DATA = {
         "Polls the interrupt endpoints at the descriptor's interval: byte `06` = 4 ms at high speed.",
         "Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged."
       ],
-      src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set"], ["log.md", "Input latency over USB: first facts and a measuring tool"]]
+      src: [["USB descriptors read from the running board and from its flash dump", ""], ["Measured on the board: input-report timing over USB", ""]]
     },
     {
       id: "pc_winusb",
@@ -1664,7 +1762,11 @@ window.BOARD_DATA = {
         "The firmware's own descriptor set asks Windows for WinUSB on interface 0.",
         "Tools reached interface 0 of the unmodified firmware (request `0xC0`, measured)."
       ],
-      src: [["xinput.md", "second section (the stock descriptor set)"], ["enter-sdp.md", "The request"], ["sdp.md", "intro"]]
+      src: [
+        ["USB descriptors of the stock firmware, read from the board and its flash dump", ""],
+        ["Disassembly of the stock firmware; the request was sent to the board", ""],
+        ["The chip's USB download mode, used on the board", ""]
+      ]
     },
     {
       id: "pc_hid",
@@ -1679,10 +1781,10 @@ window.BOARD_DATA = {
         "Flashloader: HID, report ids 1/3/4."
       ],
       src: [
-        ["usb-diagnostics.md", "What is recorded around a press"],
-        ["rumble.md", "The report"],
-        ["log.md", "Vibration motors from the PC"],
-        ["flashloader.md", "Command framing"]
+        ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""],
+        ["HID report descriptor read from the running board", ""],
+        ["Tested on the board: rumble reports sent from the PC", ""],
+        ["Tested on the board with its own signed flashloader", ""]
       ]
     },
     {
@@ -1693,8 +1795,8 @@ window.BOARD_DATA = {
       pos: [59, -1],
       size: [5, 0.8, 3],
       one: "Games that read generic HID gamepads can use the board. Games that only support one console maker's controller interface ignore it or need a helper on the PC.",
-      tech: ["The notes describe the stock board as a plain HID gamepad on USB."],
-      src: [["xinput.md", "Why"]]
+      tech: ["On USB the stock firmware is a plain HID gamepad."],
+      src: [["USB descriptors of the stock firmware, read from the board and its flash dump", ""]]
     },
     {
       id: "tool_flash",
@@ -1705,7 +1807,7 @@ window.BOARD_DATA = {
       size: [5, 0.8, 2.6],
       one: "Python tools for the chip's download mode and the board's signed flashloader: load the helper, read registers, erase, write and slowly read the flash.",
       tech: ["`sdp.py`, `sdp_read.py` (fuse and status registers), `sdp_load.py`, `flashloader.py`, `read_nor_ip.py`."],
-      src: [["tools/README.md", "list"]]
+      src: [["The tool itself", ""]]
     },
     {
       id: "tool_entersdp",
@@ -1716,7 +1818,7 @@ window.BOARD_DATA = {
       size: [5, 0.8, 2.6],
       one: "One USB request to the running firmware drops the board into the download mode.",
       tech: ["Class request `0x21` / `0xC0` to interface 0. Measured: download mode on USB 0.5 s later."],
-      src: [["enter-sdp.md", "The request"]]
+      src: [["Disassembly of the stock firmware; the request was sent to the board", ""]]
     },
     {
       id: "fuse_fr",
@@ -1731,12 +1833,13 @@ window.BOARD_DATA = {
       tech: [
         "Read back as set: `0x401F4400` = `0xc0b28c03` (bit 31 = 1), after a real power cycle.",
         "Effect: the ROM's config byte becomes `0x33` (field return) instead of `0xCC` (closed); the trust check then passes every image.",
-        "One-way: it cannot be unburned. The burning sequence, as the notes give it: scenario 'Burning the config fuse'."
+        "One-way: it cannot be unburned. The burning sequence, as the reference manual gives it: scenario 'Burning the config fuse'."
       ],
       src: [
-        ["config-fuse.md", "hab_get_config; Effect; Programming word 0x400 bit 31"],
-        ["status.md", "Done / confirmed"],
-        ["bootrom-image-auth.md", "The finalizer"]
+        ["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""],
+        ["Disassembly of the boot ROM", ""],
+        ["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""],
+        ["Read back from the chip and tested on the board", ""]
       ]
     },
     {
@@ -1751,7 +1854,7 @@ window.BOARD_DATA = {
         "Request `0x8b` starts the task; `0x8c` reads its state (running, unlock mask 0); the bulk challenge answers state 2.",
         "Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged."
       ],
-      src: [["usb-diagnostics.md", "Stock routes checked"], ["tools/README.md", "list"]]
+      src: [["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""], ["The tool itself", ""]]
     },
     {
       id: "tool_hidgui",
@@ -1765,7 +1868,7 @@ window.BOARD_DATA = {
         "Talk to the HID gamepad interface through hidapi.",
         "Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged."
       ],
-      src: [["tools/README.md", "list"], ["log.md", "Vibration motors from the PC; Input latency over USB"]]
+      src: [["The tool itself", ""], ["Tested on the board: rumble reports sent from the PC", ""], ["Measured on the board: input-report timing over USB", ""]]
     },
     {
       id: "fw_dfcheck",
@@ -1781,7 +1884,11 @@ window.BOARD_DATA = {
         "17 call sites: 7 direct, 5 each through the stubs `0x6088957c` and `0x60889580`. Count re-checked against the image; what each one gates is a single reading (see 'What the flag unlocks').",
         "On this board the vendor channel's challenge state says it is not a DF device (measured)."
       ],
-      src: [["df-device.md", "What the flag is; Who reads it"], ["usb-diagnostics.md", "Stock routes checked"]]
+      src: [
+        ["Disassembly of the stock firmware, re-checked against the image", ""],
+        ["Disassembly of the stock firmware, single reading, not independently verified", ""],
+        ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]
+      ]
     },
     {
       id: "fw_update",
@@ -1799,7 +1906,10 @@ window.BOARD_DATA = {
         "Its update task also shows an LED pattern on 'image reverted' on a DF device (single reading).",
         "Earlier work missed this writer because the decompiler export stops disassembling just before the loop."
       ],
-      src: [["df-device.md", "Who writes it; Where the track string comes from; Who reads it"]]
+      src: [
+        ["Disassembly of the stock firmware, re-checked against the image", ""],
+        ["Disassembly of the stock firmware, single reading, not independently verified", ""]
+      ]
     },
     {
       id: "fw_track",
@@ -1815,7 +1925,7 @@ window.BOARD_DATA = {
         "1. key-value entry `p_UpdateTrack` (id `0x0f`); 2. a RAM copy at `0x20046120` from an earlier fetch since start; 3. a secure web request (GET over TLS) to the maker's device-configuration service with the device's serial number appended (service address string at `0x60ae2184`), answer in JSON, field `properties.virtual_release_track`; 4. on any failure the constant `stable-channel`.",
         "Single reading; the strings named are in the image."
       ],
-      src: [["df-device.md", "Where the track string comes from"]]
+      src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
     },
     {
       id: "fw_tls",
@@ -1831,9 +1941,9 @@ window.BOARD_DATA = {
         "Expired or not-yet-valid certificates are accepted on this path (flag bit 1 of the client's settings).",
         "No host name is given to the TLS layer: no server-name extension, no name check; the host name goes only to the TCP connect. A certificate for any name under those roots would pass.",
         "The device presents its own certificate and key (mutual TLS).",
-        "A single reading of code without symbols, function names inferred; the note asks for a second, independent reading. No request was made and nothing was tried."
+        "A single reading of code without symbols, function names inferred; it deserves a second, independent reading. No request was made and nothing was tried."
       ],
-      src: [["df-device.md", "What the TLS client checks on that request; Open"]]
+      src: [["Disassembly of the stock firmware, single reading, not independently verified", ""], ["Open questions from the firmware analysis", ""]]
     },
     {
       id: "fw_reports",
@@ -1850,7 +1960,7 @@ window.BOARD_DATA = {
         "Debug-info table `0x60bcaf80` (`0x60854060`): stick and trigger state in the debug dump.",
         "What each call site gates is a single reading."
       ],
-      src: [["df-device.md", "Who reads it"]]
+      src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
     },
     {
       id: "net_cfg",
@@ -1864,7 +1974,7 @@ window.BOARD_DATA = {
         "Reached over Wi-Fi with a secure web request; the device's serial number goes with the request.",
         "The answer's field `properties.virtual_release_track` becomes the update track."
       ],
-      src: [["df-device.md", "Where the track string comes from; Open"]]
+      src: [["Disassembly of the stock firmware, single reading, not independently verified", ""], ["Open questions from the firmware analysis", ""]]
     },
     {
       id: "soc_ccm",
@@ -1877,7 +1987,7 @@ window.BOARD_DATA = {
       range: [0x400FC000, 0x400FFFFF],
       one: "The chip's clock and power controller. One of its bits switches on the supply that fuse programming needs.",
       tech: ["`CCM_CGPR` (`0x400FC064`) bit 4 (EFUSE_PROG): the fuse-programming supply. Left off, programming is a silent no-op."],
-      src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+      src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
     }
   ],
   edges: [
@@ -2033,18 +2143,18 @@ window.BOARD_DATA = {
       steps: [
         {
           t: "A map of the board",
-          cap: "This is a schematic map of a game controller's circuit board, built from a private research notebook. Blocks are parts the notes document; their positions are not the real layout.",
+          cap: "This is a schematic map of a game controller's circuit board, built from hands-on reverse engineering of one board. Blocks are parts that were identified; their positions are not the real layout.",
           focus: ["soc", "flash", "lstick", "rstick", "btn_face", "usb_c", "battery"],
-          tech: "Drag to orbit, right-drag to pan, scroll to zoom toward the cursor. Click any block for its plain-language summary, technical details and sources.",
-          src: [["hardware.md", "Why; How far to trust it"]]
+          tech: "Drag to orbit, right-drag to pan, scroll to zoom toward the cursor. Click any block for its plain-language summary, technical details and how each fact is known.",
+          src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
         },
         {
           t: "Every claim has a mark",
-          cap: "Each block carries an evidence mark: measured on the board, read from the firmware, inferred, or unknown. See-through blocks with a question mark are places where the notes are silent or disagree.",
+          cap: "Each block carries an evidence mark: measured on the board, read from the firmware, inferred, or unknown. See-through blocks with a question mark are places where nothing is known or two observations disagree.",
           nodes: ["unk_combo", "unk_power", "unk_clock", "btn_power"],
           focus: ["unk_combo", "unk_power", "unk_clock", "btn_power", "uart_pads"],
           tech: "Use 'Layers' to show only measured facts.",
-          src: [["hardware.md", "How far to trust it"]]
+          src: [["Third-party board description of this hardware (not all checked on the board)", ""]]
         },
         {
           t: "The processor",
@@ -2052,7 +2162,7 @@ window.BOARD_DATA = {
           focus: ["soc_core", "soc_dtcm", "soc_ocram", "soc_usb", "soc_gpio", "soc_ocotp"],
           open: ["soc"],
           tech: "RT1062, one Cortex-M7 core, 1 MB internal RAM, no external memory.",
-          src: [["firmware/README.md", "What the binaries show"]]
+          src: [["Flash dump of the board and disassembly of the stock firmware image", ""]]
         },
         {
           t: "The one change: a burned fuse",
@@ -2062,7 +2172,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "Fuse word 0x400 bit 31 reads set (0x401F4400 = 0xc0b28c03). Shipped units are closed.",
-          src: [["config-fuse.md", "Effect"], ["README.md", "Target"]]
+          src: [["Disassembly of the boot ROM", ""], ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""]]
         },
         {
           t: "The flash chip",
@@ -2070,7 +2180,7 @@ window.BOARD_DATA = {
           focus: ["fl_slota", "fl_slotb", "fl_boot", "fl_fcb"],
           open: ["flash"],
           tech: "Tiny regions get a minimum thickness so they stay clickable; true sizes are in each block's details.",
-          src: [["hardware.md", "Confirmed here"]]
+          src: [["Third-party board description of this hardware, matched against the board's own firmware", ""]]
         },
         {
           t: "The software layer",
@@ -2078,14 +2188,14 @@ window.BOARD_DATA = {
           focus: ["fw_rom", "fw_bl_reset", "fw_input", "fw_usbstack", "fw_logger"],
           view: "fw",
           tech: "All of it is the stock code.",
-          src: [["bootloader.md", "intro"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "The PC side",
           cap: "Across the cable: Windows' generic drivers and a few tools that work with the unmodified board.",
           focus: ["pc_host", "pc_hid", "pc_winusb", "pc_game", "tool_flash", "tool_entersdp"],
           tech: "The board is a plain HID gamepad plus a vendor interface.",
-          src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set"]]
+          src: [["USB descriptors read from the running board and from its flash dump", ""]]
         },
         {
           t: "Now watch it work",
@@ -2109,8 +2219,11 @@ window.BOARD_DATA = {
           open: ["soc"],
           rt: "first microseconds",
           mark: "static",
-          tech: "ROM at 0x00200000. The notes' addresses belong to one ROM image (HAB 4.3.7).",
-          src: [["README.md", "Target; Conventions"]]
+          tech: "ROM at 0x00200000. The addresses here belong to one ROM image (HAB 4.3.7).",
+          src: [
+            ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""],
+            ["Boot ROM of this chip revision (HAB 4.3.7), disassembled", ""]
+          ]
         },
         {
           t: "Read the flash setup",
@@ -2119,7 +2232,7 @@ window.BOARD_DATA = {
           open: ["soc", "flash"],
           mark: "static",
           tech: "FCB at flash 0x0, tag FCFB, version 0x56010400. FlexSPI is configured from it.",
-          src: [["nor-boot-image.md", "Layout at 0x60000000"], ["flexspi-nor.md", "FCB"]]
+          src: [["Flash dump of the board and the boot ROM's image checks", ""], ["Disassembly of the boot ROM and the board's flash configuration block", ""]]
         },
         {
           t: "Find the boot table",
@@ -2128,7 +2241,7 @@ window.BOARD_DATA = {
           open: ["flash"],
           mark: "measured",
           tech: "IVT at 0x60001000: entry 0x60801000, signature (CSF) pointer 0x60818000, as shipped.",
-          src: [["nor-boot-image.md", "Layout at 0x60000000"], ["bootloader.md", "intro"]]
+          src: [["Flash dump of the board and the boot ROM's image checks", ""], ["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Trust check: the burned fuse",
@@ -2137,7 +2250,11 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "hab_get_config reads fuse word 0x400 bit 31 -> config 0x33 (field return) instead of 0xCC (closed). The finalizer FUN_00202194 replaces every stage status with 0xF0 when config != 0xCC. On the board: 0x401F4400 = 0xc0b28c03 after a real power cycle; the download mode reports 0x56787856 ('not closed'). The decision path was also checked by emulating the ROM routine with the bit flipped.",
-          src: [["config-fuse.md", "hab_get_config; Effect"], ["bootrom-image-auth.md", "The finalizer; Consequence"], ["status.md", "Done / confirmed"]],
+          src: [
+            ["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""],
+            ["Disassembly of the boot ROM", ""],
+            ["Read back from the chip and tested on the board", ""]
+          ],
           nodes: ["soc_ocotp"]
         },
         {
@@ -2145,8 +2262,8 @@ window.BOARD_DATA = {
           cap: "If the board's button is held during power-on (after a full power-down), the ROM opens its USB download mode (SDP) instead of booting. This door always works.",
           flows: [["btn_power", "fw_rom", "fw_sdp", "soc_usb", "usb_c"]],
           mark: "measured",
-          tech: "Used repeatedly for recovery. Which pin the button is, and how the ROM sees it, is not in the notes (dashed path).",
-          src: [["sdp.md", "intro"], ["log.md", "Recovery path"]]
+          tech: "Used repeatedly for recovery. Which pin the button is, and how the ROM sees it, is not known (dashed path).",
+          src: [["The chip's USB download mode, used on the board", ""], ["Used on the board for recovery", ""]]
         },
         {
           t: "Jump to the bootloader",
@@ -2156,7 +2273,7 @@ window.BOARD_DATA = {
           open: ["flash"],
           mark: "measured",
           tech: "Entry 0x60801000 (vector table: SP 0x20078000, reset 0x608015b5).",
-          src: [["bootloader.md", "intro"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Set up memory, watchdogs off",
@@ -2165,16 +2282,16 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "IOMUXC_GPR17 = 0xeaaaaaaa -> 480 KB DTCM + 32 KB ITCM. WDOG1/2 and RTWDOG off.",
-          src: [["bootloader.md", "boot_app"], ["restart-command.md", "Findings"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Disassembly of the stock firmware", ""]]
         },
         {
           t: "Read the boot request",
-          cap: "It reads a note register that survives restarts (SRC_GPR6): 1 means 'go to download mode', 2 or 3 'start slot A or B now', 0 'do the normal choice'.",
+          cap: "It reads a register that survives restarts (SRC_GPR6): 1 means 'go to download mode', 2 or 3 'start slot A or B now', 0 'do the normal choice'.",
           flows: [["fw_bl_reset", "soc_src"]],
           open: ["soc"],
           mark: "measured",
           tech: "Reset handler 0x608015b4 reads and clears SRC_GPR6 (0x400F8034). Values 1 and 2 were exercised on the board.",
-          src: [["bootloader.md", "Reset handler"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Side door 2: software request",
@@ -2182,7 +2299,7 @@ window.BOARD_DATA = {
           flows: [["fw_bl_reset", "fw_sdp"]],
           mark: "measured",
           tech: "Jump to the ROM HAB failsafe entry (RVT +0x28). Suspected cause of the failure: the bootloader's FlexRAM split is still in force (untested).",
-          src: [["bootloader.md", "Tested"], ["hardware.md", "What follows for this repo"]]
+          src: [["Tested on the board with a test program", ""], ["Inference from the third-party board description", ""]]
         },
         {
           t: "Choose a slot",
@@ -2191,7 +2308,7 @@ window.BOARD_DATA = {
           open: ["flash"],
           mark: "static",
           tech: "SHA-256 fingerprint per slot is only a change detector: a changed slot gets 'new' and 3 retries. Record location (0x3c000?) not confirmed.",
-          src: [["bootloader.md", "Normal boot: bookkeeping and slot selection"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Check the firmware",
@@ -2201,7 +2318,7 @@ window.BOARD_DATA = {
           open: ["flash"],
           mark: "measured",
           tech: "check_app 0x6080200c: SP in DTCM, vectors in slot, 0xFFFFFFFF at +0x3fc; IVT -> ROM HAB. With the fuse burned, a test program with a broken signature was accepted and ran (slot A, erased since).",
-          src: [["bootloader.md", "check_app; Second variant"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Tested on the board with a test program", ""]]
         },
         {
           t: "Start the firmware",
@@ -2209,7 +2326,7 @@ window.BOARD_DATA = {
           flows: [["fw_bl_check", "fw_app_start"]],
           mark: "measured",
           tech: "VTOR = 0x60840000; SP and PC from its vector table; interrupts masked, lr = 0.",
-          src: [["bootloader.md", "boot_app"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Firmware start-up",
@@ -2218,7 +2335,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "SRC_GPR5 gets 1 ('failed') first and 2 ('passed') later. Calibration key 0x51 is read once.",
-          src: [["bootloader.md", "How the application sends those events"], ["sticks.md", "What the stock firmware does"]]
+          src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Disassembly of the stock firmware's stick code", ""]]
         },
         {
           t: "Side door 3: button combo",
@@ -2226,7 +2343,7 @@ window.BOARD_DATA = {
           flows: [["unk_combo", "fw_app_start", "fw_reboot", "fw_rom"]],
           mark: "unknown",
           tech: "board.cc 0x6088a29c: four inputs at 0 and the fifth non-zero -> reboot into the BootROM.",
-          src: [["enter-sdp.md", "How it was found; Not known"]]
+          src: [["Disassembly of the stock firmware", ""]]
         },
         {
           t: "Running",
@@ -2235,7 +2352,10 @@ window.BOARD_DATA = {
           open: ["soc", "flash"],
           mark: "measured",
           tech: "0x34000 is blanked at every start (cycle_check.py). Input timer 4000 us (3986-4015).",
-          src: [["restart-command.md", "Result"], ["usb-diagnostics.md", "The event ring"]]
+          src: [
+            ["Tested on the board (flash dumps compared before and after)", ""],
+            ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
+          ]
         }
       ]
     },
@@ -2243,7 +2363,7 @@ window.BOARD_DATA = {
       id: "burn",
       title: "Burning the config fuse",
       icon: "⚡",
-      one: "The one change this edition shows, as the notes describe it: the programming sequence from the chip's reference manual, and what was read back afterwards. It cannot be undone.",
+      one: "The one change this edition shows: the programming sequence from the chip's reference manual, and what was read back afterwards. It cannot be undone.",
       steps: [
         {
           t: "Before: closed",
@@ -2253,7 +2373,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "hab_get_config: bit 31 of word 0x400 = 0 and SEC_CONFIG closed -> 0xCC; bit 31 = 1 -> 0x33. Confirmed by running the ROM's own hab_get_config in an emulator with the bit flipped; a single-bit sweep over the word shows only bit 31 changes the result.",
-          src: [["config-fuse.md", "hab_get_config"], ["README.md", "Target"]]
+          src: [
+            ["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""],
+            ["Boot ROM of this chip revision (HAB 4.3.7), and the board's shipped secure-boot state", ""]
+          ]
         },
         {
           t: "Find the right bit",
@@ -2263,7 +2386,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "Word 0x400 bit 31 is listed as 'Reserved' in the reference manual. The older parts' location maps to OCOTP 0x6E0 here, which is the FlexSPI configuration word.",
-          src: [["config-fuse.md", "hab_get_config"]]
+          src: [["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""]]
         },
         {
           t: "1. Switch on the fuse supply",
@@ -2271,8 +2394,8 @@ window.BOARD_DATA = {
           flows: [["soc_core", "soc_ccm"]],
           open: ["soc"],
           mark: "general",
-          tech: "CCM_CGPR (0x400FC064) bit 4 (EFUSE_PROG) = 1, short settle delay. The notes give the reference manual's sequence (RM 23.3.1.3); which program ran it on this board is not recorded.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          tech: "CCM_CGPR (0x400FC064) bit 4 (EFUSE_PROG) = 1, short settle delay. This is the chip reference manual's sequence (RM 23.3.1.3); which program ran it on this board is not recorded.",
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "2. Clear errors, wait until idle",
@@ -2281,7 +2404,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "general",
           tech: "CTRL_CLR (0x401F4008) = 0x200 clears ERROR; wait for BUSY (bit 8) to clear.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "3. Select the word",
@@ -2290,7 +2413,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "general",
           tech: "CTRL = (0x3E77 << 16) | address; address index 0 for word 0x400.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "4. Write the bit",
@@ -2299,7 +2422,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "general",
           tech: "DATA (0x401F4020) = 0x80000000.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "5. Wait and check",
@@ -2308,7 +2431,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "general",
           tech: "Poll BUSY (bit 8) clear; ERROR (bit 9) must not be set.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "6. Reload and read back",
@@ -2317,7 +2440,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "general",
           tech: "CTRL_SET (0x401F4004) = 0x400 reloads the shadows; re-read 0x401F4400.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"]]
+          src: [["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""]]
         },
         {
           t: "No lock in the way",
@@ -2327,7 +2450,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "No software-armed FIELD_RETURN_LOCK on this part (the ROM does no OCOTP writes, static). SW_STICKY (0x401F4050) reads 0x18 here: bit 2 clear, so programming is not access-protected (read over the download mode).",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31; Reading the fuse state over SDP"]]
+          src: [
+            ["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""],
+            ["Read from the chip through its USB download mode", ""]
+          ]
         },
         {
           t: "One way only",
@@ -2336,8 +2462,11 @@ window.BOARD_DATA = {
           focus: ["fuse_fr", "soc_ocotp"],
           open: ["soc"],
           mark: "general",
-          tech: "The device-key effect (CAAM/SNVS key material) is stated in the notes and was not tested; it does not matter for plain, unencrypted images.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"], ["nor-boot-image.md", "A development (unsigned) image"]]
+          tech: "The device-key effect (CAAM/SNVS key material) is stated for this chip family and was not tested here; it does not matter for plain, unencrypted images.",
+          src: [
+            ["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""],
+            ["Flash dump of the board and the boot ROM's image checks", ""]
+          ]
         },
         {
           t: "Observed afterwards",
@@ -2346,7 +2475,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "0x401F4400 = 0xc0b28c03 (bit 31 set); status word 0x56787856; no ROM patches active. An unsigned helper with a changed USB product number re-enumerated with the changed value.",
-          src: [["config-fuse.md", "Programming word 0x400 bit 31"], ["status.md", "Done / confirmed"]]
+          src: [
+            ["The chip reference manual's fuse-programming sequence; the result was read back from the chip after a power cycle", ""],
+            ["Read back from the chip and tested on the board", ""]
+          ]
         }
       ]
     },
@@ -2358,12 +2490,12 @@ window.BOARD_DATA = {
       steps: [
         {
           t: "Cable in",
-          cap: "The cable goes in. The board keeps running on its battery; nothing restarts. How exactly the board notices the cable is not in the notes.",
+          cap: "The cable goes in. The board keeps running on its battery; nothing restarts. How exactly the board notices the cable is not known.",
           flows: [["usb_c", "pc_host"]],
           nodes: ["battery"],
           mark: "measured",
-          tech: "A USB replug does not power-cycle the board (pitfall in the notes).",
-          src: [["status.md", "Known pitfalls"]]
+          tech: "A USB replug does not power-cycle the board.",
+          src: [["Experience with the board", ""]]
         },
         {
           t: "'What are you?'",
@@ -2372,7 +2504,7 @@ window.BOARD_DATA = {
           open: ["soc", "flash"],
           mark: "measured",
           tech: "Configuration at 0x60acac7c, 80 bytes: interface 0 vendor (control requests, bulk 0x07/0x87), interface 1 HID with interrupt IN 0x83 and OUT 0x03, interval byte 06 = 4 ms at high speed (read from the running device). A second configuration with 5 interfaces including USB audio exists, chosen by a RAM flag; this board reports the 2-interface one.",
-          src: [["usb-diagnostics.md", "Where the 4 ms polling interval is set"]]
+          src: [["USB descriptors read from the running board and from its flash dump", ""]]
         },
         {
           t: "'Which drivers?'",
@@ -2380,7 +2512,7 @@ window.BOARD_DATA = {
           flows: [["pc_host", "usb_c", "soc_usb", "fw_usbstack", "soc_usb", "usb_c", "pc_host"]],
           mark: "static",
           tech: "BOS descriptor (device callback event 17) and vendor request 2 (event 19) return the stock OS 2.0 descriptor set, which announces WINUSB for interface 0.",
-          src: [["xinput.md", "second section (the stock descriptor set)"], ["log.md", "Traced: device callback"]]
+          src: [["USB descriptors of the stock firmware, read from the board and its flash dump", ""], ["Disassembly of the stock firmware", ""]]
         },
         {
           t: "Two drivers bind",
@@ -2388,7 +2520,7 @@ window.BOARD_DATA = {
           flows: [["pc_host", "pc_winusb"], ["pc_host", "pc_hid"]],
           mark: "measured",
           tech: "Tools reached interface 0 of the unmodified firmware; the HID report descriptor (164 bytes) was read and reports were sent through the HID driver (tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged).",
-          src: [["enter-sdp.md", "The request"], ["log.md", "Vibration motors from the PC"]]
+          src: [["Disassembly of the stock firmware; the request was sent to the board", ""], ["Tested on the board: rumble reports sent from the PC", ""]]
         },
         {
           t: "Ready",
@@ -2396,7 +2528,7 @@ window.BOARD_DATA = {
           flows: [["pc_hid", "pc_game"], ["pc_winusb", "tool_entersdp"]],
           mark: "measured",
           tech: "Idle: no input report in 3 s. Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
-          src: [["log.md", "Input latency over USB: first facts and a measuring tool"]]
+          src: [["Measured on the board: input-report timing over USB", ""]]
         }
       ]
     },
@@ -2414,7 +2546,10 @@ window.BOARD_DATA = {
           rt: "contact bounce: up to 13 edges in 0.1 ms",
           mark: "measured",
           tech: "GPIO2_IO00, pull-up, active low (pin from the board description). Bounce shows as several interrupt marks within 0.1 ms; the report is built from the first sample. Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["hardware.md", "Buttons"], ["usb-diagnostics.md", "Measured"]]
+          src: [
+            ["Third-party board description of this hardware (not all checked on the board)", ""],
+            ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
+          ]
         },
         {
           t: "Pin interrupt",
@@ -2425,7 +2560,7 @@ window.BOARD_DATA = {
           rt: "20-30 us (seen 6-113 us)",
           mark: "measured",
           tech: "input/isr mark at 0x6085abac, from the firmware's own trace ring joined with arrival times on the PC. Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["usb-diagnostics.md", "Measured: where a press spends its time"]]
+          src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
         },
         {
           t: "Sample and build the report",
@@ -2435,7 +2570,7 @@ window.BOARD_DATA = {
           rt: "250-300 us (seen 235-580 us)",
           mark: "measured",
           tech: "input/sample begin..end, input/hid begin..end (report 3). Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["usb-diagnostics.md", "What is recorded around a press; Measured"]]
+          src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
         },
         {
           t: "Into the USB controller",
@@ -2444,7 +2579,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "HID send 0x608651d4 -> 0x6084a0ee; reports go out on change only.",
-          src: [["usb-diagnostics.md", "What is recorded around a press"], ["log.md", "Input latency over USB"]]
+          src: [
+            ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""],
+            ["Measured on the board: input-report timing over USB", ""]
+          ]
         },
         {
           t: "Wait for the PC's poll",
@@ -2453,15 +2591,15 @@ window.BOARD_DATA = {
           rt: "0-4 ms, mean about 2 ms",
           mark: "measured",
           tech: "Report built -> arrival at the PC: mean 1766 us in one run, 2374 us in another, 2043 us over both = half of the 4 ms interval. Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["usb-diagnostics.md", "Measured: where a press spends its time"]]
+          src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
         },
         {
           t: "To the game",
           cap: "Windows' HID driver passes the report on; a game that reads generic gamepads sees the button.",
           flows: [["pc_host", "pc_hid", "pc_game"]],
           mark: "inferred",
-          tech: "Report arrival at the PC was measured through hidapi; what a given game does with it is not part of the notes.",
-          src: [["usb-diagnostics.md", "What is recorded around a press"]]
+          tech: "Report arrival at the PC was measured through hidapi; what a given game does with it was not tested.",
+          src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
         },
         {
           t: "Buttons without an interrupt",
@@ -2470,8 +2608,11 @@ window.BOARD_DATA = {
           open: ["soc"],
           rt: "+0-4 ms to the next sample",
           mark: "measured",
-          tech: "HID buttons 14, 15, 19, 20: no isr mark; picked up by the timer sample. Two of them may be the triggers reported as buttons (inference in hardware.md). Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["usb-diagnostics.md", "Buttons without a pin interrupt"], ["hardware.md", "Buttons"]]
+          tech: "HID buttons 14, 15, 19, 20: no isr mark; picked up by the timer sample. Two of them may be the triggers reported as buttons (an inference from the board description). Measured through the memory-read diagnostic patch (trace ring).",
+          src: [
+            ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""],
+            ["Third-party board description of this hardware (not all checked on the board)", ""]
+          ]
         }
       ]
     },
@@ -2488,7 +2629,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "Left X = ADC1 channel 11, Y = 12. One 12-bit sample per axis, no averaging. Sensor supply switched by GPIO2_IO10 (board description).",
-          src: [["sticks.md", "What the stock firmware does"], ["hardware.md", "Analog inputs"]]
+          src: [["Disassembly of the stock firmware's stick code", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
         },
         {
           t: "Every 4 ms",
@@ -2498,7 +2639,7 @@ window.BOARD_DATA = {
           rt: "every 4 ms, pass about 0.2 ms",
           mark: "measured",
           tech: "Timer marks every 4000 us; sample pass about 196 us. Measured through the memory-read diagnostic patch (trace ring).",
-          src: [["usb-diagnostics.md", "The event ring"]]
+          src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
         },
         {
           t: "Calibrate",
@@ -2506,7 +2647,10 @@ window.BOARD_DATA = {
           flows: [["fw_kv", "fw_sticks"]],
           mark: "measured",
           tech: "Left X: 868 / 2184-2224 / 3333 (read from RAM with a diagnostic patch). Each half scaled on its own to ±1.0, reached at 95 % of the calibrated travel. Calibration (key 0x51) is read once at start.",
-          src: [["sticks.md", "What the stock firmware does; This board"]]
+          src: [
+            ["Disassembly of the stock firmware's stick code", ""],
+            ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""]
+          ]
         },
         {
           t: "Dead zone",
@@ -2515,7 +2659,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "DeadzoneLength float at 0x20029f20, read every sample; outside it the radius is rescaled so there is no jump. Output 0..4096, centre 2048 at 0x2002f384.",
-          src: [["sticks.md", "What the stock firmware does"]]
+          src: [["Disassembly of the stock firmware's stick code", ""]]
         },
         {
           t: "Cut to 8 bits",
@@ -2523,7 +2667,10 @@ window.BOARD_DATA = {
           flows: [["ram_calib", "fw_hid"]],
           mark: "measured",
           tech: "0x60852a4e with tables 0x60ababfc / 0x60abac14. Smallest step 258 on a 16-bit scale. Measured through a modified USB interface that passed the stock 8-bit values on.",
-          src: [["sticks.md", "What the stock firmware does; This board (2026-11-17)"]]
+          src: [
+            ["Disassembly of the stock firmware's stick code", ""],
+            ["Read from the board's RAM over USB with a diagnostic patch, and an interactive stick test", ""]
+          ]
         },
         {
           t: "To the PC",
@@ -2532,7 +2679,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
-          src: [["log.md", "Input latency over USB: first facts and a measuring tool"]]
+          src: [["Measured on the board: input-report timing over USB", ""]]
         },
         {
           t: "Triggers",
@@ -2541,7 +2688,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "A tenth of dead travel at each end.",
-          src: [["sticks.md", "What the stock firmware does"]]
+          src: [["Disassembly of the stock firmware's stick code", ""]]
         }
       ]
     },
@@ -2558,7 +2705,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "Two little-endian 16-bit values 0..0xFFFF (report descriptor: usage page 0x0F, usage 0x97). Tested: 05 00 60 00 60 accepted and the motors ran. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
-          src: [["rumble.md", "The report"], ["log.md", "Vibration motors from the PC"]]
+          src: [["HID report descriptor read from the running board", ""], ["Tested on the board: rumble reports sent from the PC", ""]]
         },
         {
           t: "The firmware receives it",
@@ -2568,7 +2715,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "HID class callback 0x60865138 -> output-report handler 0x6085290c -> haptics 0x60883734.",
-          src: [["rumble.md", "From report value to motor drive"], ["xinput.md", "What the routines do"]]
+          src: [["Disassembly of the stock firmware's rumble code", ""], ["Disassembly of the stock firmware", ""]]
         },
         {
           t: "Battery correction",
@@ -2577,7 +2724,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "percent = value x 100 / 65535; duty = (min + (100 - min) x percent / 100) x 3400 / Vbat, capped at 100. At 4.35 V full strength is 78 % duty.",
-          src: [["rumble.md", "From report value to motor drive"]]
+          src: [["Disassembly of the stock firmware's rumble code", ""]]
         },
         {
           t: "Motors spin",
@@ -2586,7 +2733,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "FlexPWM4 submodules 2 and 3 (board description). Which motor is which was not recorded.",
-          src: [["rumble.md", "all"], ["hardware.md", "Confirmed here"]]
+          src: [
+            ["Disassembly of the stock firmware's rumble code", ""],
+            ["Third-party board description of this hardware, matched against the board's own firmware", ""]
+          ]
         }
       ]
     },
@@ -2603,7 +2753,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "Logger object 0x200262c8 with three sink slots; the firmware fills two.",
-          src: [["firmware-log.md", "What the stock firmware offers"]]
+          src: [["Disassembly of the stock firmware's logger", ""]]
         },
         {
           t: "The USB listener",
@@ -2611,7 +2761,7 @@ window.BOARD_DATA = {
           flows: [["fw_logger", "fw_vtask"]],
           mark: "static",
           tech: "Bulk request field 5 switches streaming on; each record goes out as response field 6. Replays the lines buffered since start, then sends new ones.",
-          src: [["usb-diagnostics.md", "Stock routes checked"], ["firmware-log.md", "What the stock firmware offers"]]
+          src: [["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""], ["Disassembly of the stock firmware's logger", ""]]
         },
         {
           t: "Asking for the channel",
@@ -2624,7 +2774,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "Request 0x8b starts the task, 0x8c returns running = 1 and unlock mask 0; the bulk challenge reports state 2: a signature is needed. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
-          src: [["usb-diagnostics.md", "Stock routes checked"]]
+          src: [["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
         },
         {
           t: "Why it stays locked",
@@ -2633,7 +2783,7 @@ window.BOARD_DATA = {
           focus: ["fw_vtask", "fw_vendor", "fw_usbstack"],
           mark: "static",
           tech: "ECDSA P-256 over the SHA-256 of the challenge, a second string and the level, checked against one of two public keys in the image.",
-          src: [["usb-diagnostics.md", "Stock routes checked"]]
+          src: [["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
         },
         {
           t: "The DF exception",
@@ -2643,7 +2793,11 @@ window.BOARD_DATA = {
           focus: ["fw_vtask", "fw_kv", "fw_dfcheck"],
           mark: "static",
           tech: "Besides the unlock, the flag gates: serial numbers in crash uploads and in the logging ID; a 3 s button combination that saves a user bug report; LED patterns after a saved bug report and on an image revert; stick and trigger state in the debug dump; real network and Bluetooth addresses in logs instead of placeholders.",
-          src: [["df-device.md", "What the flag is; Who reads it"], ["usb-diagnostics.md", "Stock routes checked"]]
+          src: [
+            ["Disassembly of the stock firmware, re-checked against the image", ""],
+            ["Disassembly of the stock firmware, single reading, not independently verified", ""],
+            ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]
+          ]
         },
         {
           t: "The serial port",
@@ -2652,7 +2806,11 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "LPUART1, 115200 baud (board description). The UART log is not gated by the DF flag.",
-          src: [["df-device.md", "Who reads it"], ["hardware.md", "Other devices; What follows for this repo"]]
+          src: [
+            ["Disassembly of the stock firmware, single reading, not independently verified", ""],
+            ["Third-party board description of this hardware (not all checked on the board)", ""],
+            ["Inference from the third-party board description", ""]
+          ]
         },
         {
           t: "The input trace ring",
@@ -2661,7 +2819,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "500 entries at 0x200357b8. Reading it needed a diagnostic patch; that is how the button timings were measured.",
-          src: [["usb-diagnostics.md", "The event ring (static); Stock routes checked"]]
+          src: [["Disassembly of the stock firmware", ""], ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]]
         }
       ]
     },
@@ -2669,7 +2827,7 @@ window.BOARD_DATA = {
       id: "dogfood",
       title: "The dogfood flag: how it gets set and what it unlocks",
       icon: "⚑",
-      one: "A stored flag marks the maker's internal test units. The firmware's own update check sets it; seventeen places read it. Marks follow the note: re-checked facts are 'static', single readings are marked as such.",
+      one: "A stored flag marks the maker's internal test units. The firmware's own update check sets it; seventeen places read it. Re-checked facts are marked 'static'; one-pass readings are marked 'single reading'.",
       steps: [
         {
           t: "The flag and its check",
@@ -2678,7 +2836,10 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "static",
           tech: "DF check 0x60889510: fuse word 0x26 bit 8 clear -> yes; else key-value entry 0x1c (boolean, default false). Re-checked against the image. This board is not a DF device (vendor-channel challenge state 2, measured).",
-          src: [["df-device.md", "What the flag is"], ["usb-diagnostics.md", "Stock routes checked"]]
+          src: [
+            ["Disassembly of the stock firmware, re-checked against the image", ""],
+            ["Disassembly of the stock firmware's USB vendor channel, plus requests sent to the board", ""]
+          ]
         },
         {
           t: "When the update check runs",
@@ -2687,7 +2848,7 @@ window.BOARD_DATA = {
           nodes: ["radio"],
           mark: "single",
           tech: "p_NoOta not set, firmware running from partition 1 or 2, network connection. Single reading.",
-          src: [["df-device.md", "Where the track string comes from"]]
+          src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
         },
         {
           t: "Which update track?",
@@ -2695,7 +2856,7 @@ window.BOARD_DATA = {
           flows: [["fw_update", "fw_track", "fw_kv"]],
           mark: "single",
           tech: "Routine 0x608f4648: p_UpdateTrack (key 0x0f); RAM copy 0x20046120; the service request with the serial number appended, JSON field properties.virtual_release_track; fallback stable-channel. Single reading; the strings are in the image.",
-          src: [["df-device.md", "Where the track string comes from"]]
+          src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
         },
         {
           t: "The request goes out",
@@ -2704,7 +2865,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "single",
           tech: "A secure web request (GET over TLS); the service address string is at 0x60ae2184. No request was made in this work.",
-          src: [["df-device.md", "Where the track string comes from"]]
+          src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
         },
         {
           t: "What the TLS client checks",
@@ -2712,8 +2873,8 @@ window.BOARD_DATA = {
           nodes: ["fw_tls", "net_cfg"],
           focus: ["fw_tls", "net_cfg", "fw_track"],
           mark: "single",
-          tech: "Trust list 0x200461a0, no pinning of a key or leaf; expired or not-yet-valid accepted (flag bit 1 of the client's settings); no server-name extension, the host name goes only to the TCP connect; mutual TLS. A single reading with inferred function names; the note asks for a second, independent reading before anyone relies on it.",
-          src: [["df-device.md", "What the TLS client checks on that request; Open"]]
+          tech: "Trust list 0x200461a0, no pinning of a key or leaf; expired or not-yet-valid accepted (flag bit 1 of the client's settings); no server-name extension, the host name goes only to the TCP connect; mutual TLS. A single reading with inferred function names; it deserves a second, independent reading before anyone relies on it.",
+          src: [["Disassembly of the stock firmware, single reading, not independently verified", ""], ["Open questions from the firmware analysis", ""]]
         },
         {
           t: "The prefix test sets the flag",
@@ -2722,7 +2883,10 @@ window.BOARD_DATA = {
           open: ["flash"],
           mark: "static",
           tech: "Update checker 0x6085431c: table 0x60abb3a4 -> 'df-' and 'qa-' (0x60abb81a); loop 0x608543ae-0x608543f4 with memcmp 0x60aaef50 (case-sensitive prefix test); write of 1 under key 0x1c at 0x608543ee. Re-checked against the image. The flag sits in store 0 with the user settings; that this is the 0x28000 flash range is an inference.",
-          src: [["df-device.md", "Who writes it"], ["hardware.md", "Flash partitions below slot A"]]
+          src: [
+            ["Disassembly of the stock firmware, re-checked against the image", ""],
+            ["Third-party board description of this hardware (not all checked on the board)", ""]
+          ]
         },
         {
           t: "The only other writer",
@@ -2730,7 +2894,7 @@ window.BOARD_DATA = {
           flows: [["fw_vtask", "fw_kv"]],
           mark: "single",
           tech: "Bulk request field 9 (handler 0x608fc15c); without a value it erases the key. No other writer of the key (every call of the write routine checked): single reading.",
-          src: [["df-device.md", "Who writes it"]]
+          src: [["Disassembly of the stock firmware, re-checked against the image", ""]]
         },
         {
           t: "What the flag unlocks",
@@ -2745,7 +2909,7 @@ window.BOARD_DATA = {
           ],
           mark: "single",
           tech: "Call-site count re-checked against the image (7 direct, 5 each through two stubs); what each gates is a single reading. Not gated by the flag: UART logging (a development fuse and LogToUart) and the update path itself.",
-          src: [["df-device.md", "Who reads it"]]
+          src: [["Disassembly of the stock firmware, single reading, not independently verified", ""]]
         },
         {
           t: "Open questions",
@@ -2753,8 +2917,8 @@ window.BOARD_DATA = {
           nodes: ["fw_kv", "net_cfg", "fw_tls"],
           focus: ["fw_kv", "net_cfg", "fw_tls", "fw_update"],
           mark: "unknown",
-          tech: "The TLS points deserve a second, independent reading (the note's own words).",
-          src: [["df-device.md", "Open"]]
+          tech: "The TLS points deserve a second, independent reading.",
+          src: [["Open questions from the firmware analysis", ""]]
         }
       ]
     },
@@ -2769,8 +2933,8 @@ window.BOARD_DATA = {
           cap: "Power fully down, hold the board's button, power on: the chip's ROM opens its USB download mode. This works whatever is in the flash.",
           flows: [["btn_power", "fw_rom", "fw_sdp"]],
           mark: "measured",
-          tech: "The battery means a USB replug is not a power-down. Which pin the button is, and how the ROM sees it, is not in the notes.",
-          src: [["sdp.md", "intro"], ["status.md", "Known pitfalls"]]
+          tech: "The battery means a USB replug is not a power-down. Which pin the button is, and how the ROM sees it, is not known.",
+          src: [["The chip's USB download mode, used on the board", ""], ["Experience with the board", ""]]
         },
         {
           t: "Or from the running firmware",
@@ -2779,7 +2943,7 @@ window.BOARD_DATA = {
           rt: "download mode on USB 0.5 s later",
           mark: "measured",
           tech: "Class request 0x21 / 0xC0 to interface 0. Measured on the unmodified firmware.",
-          src: [["enter-sdp.md", "The request"], ["log.md", "SDP on demand over USB"]]
+          src: [["Disassembly of the stock firmware; the request was sent to the board", ""], ["Tested on the board over USB", ""]]
         },
         {
           t: "What the download mode offers",
@@ -2789,7 +2953,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "Commands READ_REGISTER, WRITE_FILE, JUMP_ADDRESS. Status word 0x56787856 (closed would be 0x12343412). The fuse shadow can be read here without running any code.",
-          src: [["sdp.md", "all"], ["config-fuse.md", "Reading the fuse state over SDP"]]
+          src: [["The chip's USB download mode, used on the board", ""], ["Read from the chip through its USB download mode", ""]]
         },
         {
           t: "Load the flashloader",
@@ -2800,10 +2964,10 @@ window.BOARD_DATA = {
           mark: "measured",
           tech: "WRITE_FILE to 0x20000000, JUMP 0x20000400; the ROM's trust check runs on the way. Measured: an unsigned copy of the helper with its read whitelist widened (3 bytes) runs on this board and reads all 16 MB in 10.2 s (1600 KB/s), two reads identical.",
           src: [
-            ["flashloader.md", "intro; Lifting the read restriction"],
-            ["sdp.md", "Loading an image"],
-            ["reading-flash.md", "1b. Read-patched flashloader"],
-            ["status.md", "Done / confirmed"]
+            ["Tested on the board with its own signed flashloader", ""],
+            ["The chip's USB download mode, used on the board", ""],
+            ["Measured while reading out the board's flash", ""],
+            ["Read back from the chip and tested on the board", ""]
           ]
         },
         {
@@ -2813,7 +2977,7 @@ window.BOARD_DATA = {
           open: ["soc"],
           mark: "measured",
           tech: "HID, MCU-bootloader framing (report ids 1/3/4).",
-          src: [["flashloader.md", "Command framing"]]
+          src: [["Tested on the board with its own signed flashloader", ""]]
         },
         {
           t: "What it allows",
@@ -2823,10 +2987,7 @@ window.BOARD_DATA = {
           rt: "erase 0.07 s per 4 KB; full read about 7 hours",
           mark: "measured",
           tech: "Three address whitelists; reads of RAM and fuses are refused with 0x27d8; writes only to erased, page-aligned addresses; the write list skips flash 0x2000-0x3fff.",
-          src: [
-            ["flashloader.md", "This flashloader is memory-access-restricted; NOR writes are allowed"],
-            ["reading-flash.md", "1. IP reads through the restricted flashloader"]
-          ]
+          src: [["Tested on the board with its own signed flashloader", ""], ["Measured while reading out the board's flash", ""]]
         },
         {
           t: "Restart",
@@ -2836,7 +2997,7 @@ window.BOARD_DATA = {
           rt: "firmware on USB about 1 s after Reset",
           mark: "measured",
           tech: "Flashloader Reset (0x0b) with SRC_GPR6 = 0: the stock firmware was on USB 1 s later.",
-          src: [["log.md", "SDP on demand over USB"]]
+          src: [["Tested on the board over USB", ""]]
         },
         {
           t: "Recovery always works",
@@ -2845,101 +3006,94 @@ window.BOARD_DATA = {
           nodes: ["flash"],
           mark: "measured",
           tech: "Back up the flash before writing anything; the button route is the way back.",
-          src: [["nor-boot-image.md", "Writing it"], ["reading-flash.md", "Backups"]]
+          src: [["Writing and recovering the flash on the board", ""], ["Measured while reading out the board's flash", ""]]
         }
       ]
     }
   ],
   issues: [
     {
-      title: "Which decompiled image is the application?",
-      nodes: ["fl_slotb", "fl_slota"],
-      src: [["README.md", "Layout (firmware/)"], ["firmware/README.md", "Checked against this board's NOR backup"]],
-      text: "README.md calls one decompiled image the application and the other the radio image; firmware/README.md shows that the image the README calls 'radio' is the one running in slot B, and says the labels are 'as received and not verified'. All other notes treat the slot B image as the application.",
-      shown: "The map follows the code and the dumps: slot B holds the running firmware."
-    },
-    {
-      title: "A second bootloader partition at 0x820000?",
+      title: "A second bootloader region at 0x820000?",
       nodes: ["fl_boot2"],
-      src: [["hardware.md", "Flash partitions below slot A"], ["status.md", "Open"], ["log.md", "Fast backup"]],
-      text: "The board description lists a second bootloader partition at 0x820000 (128 KB). The dumps show 0x820000-0x83ffff blank: used ranges end at 0x81ffff.",
+      src: [["Third-party board description", ""], ["Flash dump of the board", ""]],
+      text: "A third-party board description lists a second bootloader region at 0x820000 (128 KB). The board's flash dump shows that range blank: the used ranges end at 0x81ffff.",
       shown: "See-through flash layer with a question mark."
     },
     {
-      title: "What is at 0x30000-0x37fff (records at 0x34000)?",
+      title: "What are the records at 0x34000?",
       nodes: ["fl_rec", "fl_crash", "fl_kvboot"],
-      src: [["hardware.md", "Open against this repo"], ["restart-command.md", "Result"], ["bootloader.md", "Not known"]],
-      text: "The board description has no entry for it and puts crash logs at 0x6000-0x27fff. restart-command.md calls 0x34000 the tombstone (crash log) partition by its strings. bootloader.md first guessed the boot store, then ruled it out. Measured: the firmware writes and erases records there at boot.",
-      shown: "Flash layer marked measured (behaviour) with a warning sign for the disputed purpose."
+      src: [["Flash dumps compared across boots", ""], ["Strings in the stock firmware", ""], ["Third-party board description", ""]],
+      text: "On the board, the firmware writes records at 0x34000 and erases them at every start. Strings in the firmware call the area a crash log ('tombstone'), while the board description has no entry for 0x30000-0x37fff and places crash logs at 0x6000-0x27fff. What the records are is open.",
+      shown: "Flash layer marked measured (the behaviour), with a warning sign for its purpose."
     },
     {
-      title: "Where is the bootloader's slot record store?",
+      title: "Where does the bootloader keep its slot records?",
       nodes: ["fl_kvboot", "fw_bl_select"],
-      src: [["bootloader.md", "Not known"]],
-      text: "An outside reader places it at 0x3c000-0x3ffff; this repo sees headers there but cannot read the content.",
-      shown: "Layer marked inferred; the bookkeeping edge to it is dashed."
+      src: [["Disassembly of the bootloader", ""], ["Report from another researcher", ""], ["Flash dump of the board", ""]],
+      text: "The bootloader keeps a record per firmware slot (fingerprint, stage, retries). Another researcher places the store at 0x3c000-0x3ffff; the flash dump shows sector headers there, but the content could not be decoded.",
+      shown: "Layer marked inferred; the path to it is dashed."
     },
     {
-      title: "Stick sensor type",
+      title: "What sensors are in the sticks?",
       nodes: ["lstick", "rstick", "hall_pwr"],
-      src: [["hardware.md", "Analog inputs"], ["sticks.md", "What goes wrong with sticks in general"]],
-      text: "hardware.md (board description) mentions a supply for hall-effect sensors; sticks.md's general section describes sticks with two potentiometers. Neither was checked on this board.",
-      shown: "Stick details name hall-effect as 'per board description'; the supply switch is marked inferred."
+      src: [["Third-party board description", ""]],
+      text: "The board description switches a supply for hall-effect sensors; the sensor type was not checked on the board.",
+      shown: "Stick details say 'per board description'; the supply switch is marked inferred."
     },
     {
-      title: "DTCM size: 512 KB or 480 KB",
+      title: "DTCM: 512 KB or 480 KB?",
       nodes: ["soc_dtcm", "soc_iomuxc"],
-      src: [["firmware/README.md", "What the binaries show"], ["hardware.md", "FlexRAM default layout"], ["bootloader.md", "boot_app"]],
-      text: "The MPU table lists DTCM as 512 KB; the bootloader's FlexRAM value gives 480 KB DTCM (top 0x20078000). Not necessarily a contradiction (an MPU region can be larger than the RAM behind it).",
+      src: [["Disassembly of the stock firmware (MPU table)", ""], ["Disassembly of the bootloader (memory split)", ""]],
+      text: "The firmware's memory-protection table lists 512 KB of DTCM; the bootloader's memory-split setting gives 480 KB (top at 0x20078000). Not necessarily a contradiction: a protection region can be larger than the RAM behind it.",
       shown: "Drawn as 480 KB, with both numbers in the details."
     },
     {
-      title: "Silent: power, clocks, physical layout",
+      title: "Power, clocks and physical layout",
       nodes: ["unk_power", "unk_clock"],
-      src: [["hardware.md", "(not covered)"]],
-      text: "The notes do not describe regulators, the power path, crystals or where parts sit on the board.",
-      shown: "Ghost blocks; positions on the map are schematic."
+      src: [["Open question", ""]],
+      text: "How battery and USB power become the chip's supply voltages, where the clocks come from, and where the parts sit on the board are not known.",
+      shown: "See-through blocks; positions on the map are schematic."
     },
     {
-      title: "Silent: which buttons and pins",
+      title: "Which buttons and pins?",
       nodes: ["btn_power", "unk_combo", "soc_gpio"],
-      src: [["sdp.md", "intro"], ["enter-sdp.md", "Not known"], ["hardware.md", "Buttons"]],
-      text: "Which pin the SDP/power button is and how the ROM sees it; which five pins the start-up combination reads; which physical buttons HID buttons 14, 15, 19, 20 are.",
-      shown: "Dashed path from the button to the ROM; ghost block for the combination."
+      src: [["Disassembly of the stock firmware", ""], ["Timing measurements on the board", ""]],
+      text: "Not known: which pin the power / download button is and how the boot ROM sees it; which five pins the start-up combination reads; which physical buttons the reported buttons 14, 15, 19 and 20 are.",
+      shown: "Dashed path from the button to the ROM; see-through block for the combination."
     },
     {
-      title: "Silent: motors",
+      title: "The motors",
       nodes: ["motor_l", "motor_r"],
-      src: [["rumble.md", "Not known"]],
-      text: "Which motor is big or small, their rated voltage, the driver's current limit and the motors' minimum duty are not known.",
-      shown: "Motors are labelled 1 and 2, not big/small."
+      src: [["Disassembly of the stock firmware's rumble code", ""], ["Tested on the board", ""]],
+      text: "Which motor is big and which small, their rated voltage, the driver's current limit and the motors' minimum duty are not known.",
+      shown: "Motors are labelled 1 and 2, not big and small."
     },
     {
-      title: "Silent: how the cable is detected",
+      title: "How is the cable detected?",
       nodes: ["usb_c", "usb_pd"],
-      src: [["hardware.md", "Other devices"]],
-      text: "Nothing describes how the board notices a cable (VBUS sensing); the USB-C port controller is only named in comments.",
+      src: [["Third-party board description", ""]],
+      text: "How the board notices a USB cable is not known; the USB-C port controller is only named in comments of the board description.",
       shown: "The plug-in scenario says so in its first step."
     },
     {
-      title: "Which numbers needed a diagnostic change",
+      title: "Which numbers were measured with a diagnostic change?",
       nodes: ["ram_trace", "fw_input", "pc_host", "lstick"],
-      src: [["usb-diagnostics.md", "The memory-read patch; Measured"], ["log.md", "2026-11-16"], ["sticks.md", "This board (2026-11-17)"]],
-      text: "The button timings came from the firmware's trace ring, and the stored stick calibration, the timer rate and the heap counter from RAM, all read through the memory-read diagnostic patch. The log replay size was seen through the log-unlock diagnostic patch; the stick sweep numbers through a modified USB interface that passed the stock 8-bit values on. The 4 ms report interval, the rumble test and the locked-channel test were made while the firmware carried a small restart patch in its vendor-request handler. None of these changes sit on the paths measured, but the numbers were not taken on a completely unmodified board.",
+      src: [["Measurements on the board over USB", ""]],
+      text: "The button timings came from the firmware's trace ring, and the stored stick calibration, the timer rate and the heap counter from RAM, all read through a memory-read diagnostic patch. The log replay size was seen through a log-unlock diagnostic patch; the stick sweep numbers through a modified USB interface that passed the stock 8-bit values on. The 4 ms report interval, the rumble test and the locked-channel test were made while the firmware carried a small restart patch in its vendor-request handler. None of these changes sit on the paths measured, but the numbers were not taken on a completely unmodified board.",
       shown: "Every number is kept; each step or block that uses one says in one line how it was measured."
     },
     {
-      title: "How the fuse was burned",
+      title: "Who ran the fuse-programming sequence?",
       nodes: ["fuse_fr", "soc_ocotp", "soc_ccm"],
-      src: [["config-fuse.md", "Programming word 0x400 bit 31"], ["status.md", "Done / confirmed"]],
-      text: "The notes give the reference manual's programming sequence and what was read back afterwards. They do not record which program ran the sequence on this board.",
+      src: [["Chip reference manual", ""], ["Read back from the chip after a power cycle", ""]],
+      text: "The programming sequence shown is the chip reference manual's; the burned bit was read back after a power cycle. Which program ran the sequence on this board is not recorded.",
       shown: "The scenario 'Burning the config fuse': the sequence marked as general chip knowledge, the lock check and the result marked as measured."
     },
     {
       title: "Dogfood flag: open questions",
       nodes: ["fw_kv", "net_cfg", "fw_tls", "fw_update"],
-      src: [["df-device.md", "Open"]],
-      text: "Whether a factory reset clears the flag (it is in store 0 with the user settings); whether this board has ever had Wi-Fi credentials; whether the maker's services still answer. The TLS reading is a single pass and deserves a second, independent reading.",
+      src: [["Disassembly of the stock firmware, single reading", ""]],
+      text: "Does a factory reset clear the flag (it is stored with the user settings)? Has this board ever had Wi-Fi credentials? Do the maker's services still answer? The TLS reading is a single pass and deserves a second, independent reading.",
       shown: "Last step of the scenario 'The dogfood flag'; the single-reading blocks carry their own mark."
     }
   ]
@@ -2951,7 +3105,7 @@ window.BOARD_DATA = {
   <header id="top">
     <div class="brand">
       <span class="logo" aria-hidden="true">◈</span>
-      <div class="brand-text"><b>Board Map Explorer</b><span class="sub">how this controller board works, from the notes</span></div>
+      <div class="brand-text"><b>Board Map Explorer</b><span class="sub">how one game controller's board works, reverse-engineered</span></div>
     </div>
     <div class="search" role="search">
       <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search a block or address, e.g. 0x401F4400" aria-label="Search blocks or addresses" aria-controls="sugg" aria-expanded="false">
@@ -3005,7 +3159,7 @@ window.BOARD_DATA = {
         <span id="capMark" class="chip mark"></span>
       </div>
       <p id="capText"></p>
-      <details id="capMore"><summary>Technical detail and source</summary><div id="capTech"></div><div id="capSrc" class="src"></div></details>
+      <details id="capMore"><summary>Technical detail and how it is known</summary><div id="capTech"></div><div id="capSrc" class="src"></div></details>
     </div>
     <div id="transport">
       <button id="pPrev" class="pbtn" aria-label="Previous step (Left arrow)" title="Previous step (←)">⏮</button>
@@ -3050,7 +3204,7 @@ window.BOARD_DATA = {
     <h3>Blocks</h3><div id="lgKinds" class="lg"></div>
     <h3>Evidence marks</h3><div id="lgMarks" class="lg"></div>
     <h3>Signals (packet colours)</h3><div id="lgSignals" class="lg"></div>
-    <p class="muted small">See-through, dashed blocks with “?” are places where the notes are silent or disagree. Dashed paths are inferred or unknown. A thin thread hangs each software block from where its code lives.</p>
+    <p class="muted small">See-through, dashed blocks with “?” are places where nothing is known or two observations disagree. Dashed paths are inferred or unknown. A thin thread hangs each software block from where its code lives.</p>
   </div>
 
   <div id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -3065,7 +3219,7 @@ window.BOARD_DATA = {
       <div class="logo big" aria-hidden="true">◈</div>
       <h1 id="wTitle">How this controller board works</h1>
       <p>A 3D map of the board, its chips, the software inside them and the PC on the other end of the cable. Glowing packets show what happens at power-on, when the cable goes in, when you press a button, move a stick, feel rumble, read logs or use the download mode.</p>
-      <p class="muted small">This edition shows the board as shipped with one change: a single fuse bit is burned. Everything comes from a private research notebook; click any block for a plain-language summary first, then the technical detail and the note it comes from.</p>
+      <p class="muted small">It shows one board as shipped, with a single change: one fuse bit is burned. Everything comes from hands-on reverse engineering of that board. Click any block for a plain-language summary first, then the technical detail and how the fact is known.</p>
       <p id="wFallback" class="warn" hidden></p>
       <div class="row center"><button id="wTour" class="cta">▶ Start tour</button><button id="wFree" class="ghostbtn">Explore freely</button></div>
     </div>
@@ -8400,7 +8554,7 @@ void main() {
     const mk = d.mark ? D.marks[d.mark] : null, cm = $('#capMark');
     cm.hidden = !mk; if (mk) { cm.innerHTML = `<span class="dot"></span>${esc(mk.short)}`; cm.style.setProperty('--mc', mk.color); cm.title = mk.label; }
     $('#capTech').innerHTML = d.tech ? fmt(d.tech) : '';
-    $('#capSrc').innerHTML = (d.src || []).map(s => `<div>${esc(s[0])} — ${esc(s[1])}</div>`).join('');
+    $('#capSrc').innerHTML = (d.src || []).length ? '<b>How it is known:</b>' + (d.src || []).map(s => `<div>${esc(s[0])}${s[1] ? ' — ' + esc(s[1]) : ''}</div>`).join('') : '';
     Array.from($('#stepList').children).forEach((li, k) => {
       const b = li.firstChild; b.classList.toggle('cur', k === i); b.classList.toggle('done', k < i);
       if (k === i) b.scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
@@ -8449,7 +8603,7 @@ void main() {
   }
   function renderDetail(n) {
     const k = D.kinds[n.kind], m = D.marks[n.mark];
-    $('#dChips').innerHTML = `<span class="chip kind" style="--kc:${k.color}">${esc(k.label)}</span><span class="chip" style="--mc:${m.color}" title="${esc(m.label)}"><span class="dot"></span>${esc(m.short)}</span>` + (n.ghost ? '<span class="chip">notes silent / disputed</span>' : '') + (n.disputed && !n.ghost ? '<span class="chip">⚠ disputed</span>' : '');
+    $('#dChips').innerHTML = `<span class="chip kind" style="--kc:${k.color}">${esc(k.label)}</span><span class="chip" style="--mc:${m.color}" title="${esc(m.label)}"><span class="dot"></span>${esc(m.short)}</span>` + (n.ghost ? '<span class="chip">unknown / disputed</span>' : '') + (n.disputed && !n.ghost ? '<span class="chip">⚠ disputed</span>' : '');
     const parts = [];
     parts.push(`<h2>${esc(n.label)}</h2><p class="one">${esc(n.one)}</p>`);
     const acts = [];
@@ -8486,7 +8640,7 @@ void main() {
     }
     const iss = D.issues.filter(is => (is.nodes || []).includes(n.id));
     if (iss.length) parts.push(`<h4>Gaps and conflicts</h4>` + iss.map(is => `<p class="small"><b>${esc(is.title)}.</b> ${esc(is.text)}</p>`).join(''));
-    parts.push(`<h4>Sources</h4><div class="src">${(n.src || []).map(s => `<div>${esc(s[0])} — ${esc(s[1])}</div>`).join('')}</div>`);
+    parts.push(`<h4>How this is known</h4><div class="src">${(n.src || []).map(s => `<div>${esc(s[0])}${s[1] ? ' — ' + esc(s[1]) : ''}</div>`).join('')}</div>`);
     const body = $('#dBody'); body.innerHTML = parts.join(''); body.scrollTop = 0;
   }
   $('#dBody').addEventListener('click', e => {
@@ -8606,16 +8760,16 @@ void main() {
   function closeModal() { $('#modal').hidden = true; }
   $('#modalClose').addEventListener('click', closeModal);
   $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); const go = e.target.closest('[data-go]'); if (go) { closeModal(); selectNode(go.dataset.go, { fly: true }); } });
-  $('#bIssues').addEventListener('click', () => openModal('Where the notes are silent or disagree', `<p class="muted small">Collected while building this map. Each entry says where it comes from and how the map shows it.</p>` + D.issues.map(is => `
+  $('#bIssues').addEventListener('click', () => openModal('Open questions and disagreements', `<p class="muted small">What is not known about this board, and where two observations disagree. Each entry says how the map shows it.</p>` + D.issues.map(is => `
     <div class="issue"><h4>${esc(is.title)}</h4><p>${esc(is.text)}</p><p class="shown"><b>Shown as:</b> ${esc(is.shown)}</p>
-    <div class="src">${(is.src || []).map(s => `<div>${esc(s[0])} — ${esc(s[1])}</div>`).join('')}</div>
+    <div class="src">${(is.src || []).map(s => `<div>${esc(s[0])}${s[1] ? ' — ' + esc(s[1]) : ''}</div>`).join('')}</div>
     <div class="row" style="margin-top:6px">${(is.nodes || []).map(id => `<button class="mini" data-go="${id}">${esc(N.get(id).label)}</button>`).join('')}</div></div>`).join('')));
   $('#bHelp').addEventListener('click', () => openModal('How to use this map', `
     <table class="keys">
       <tr><td>Drag</td><td>orbit around the board</td></tr>
       <tr><td>Right-drag, Shift-drag</td><td>pan along the board</td></tr>
       <tr><td>Scroll / pinch</td><td>zoom toward the cursor</td></tr>
-      <tr><td>Click a block or label</td><td>details: plain summary, technical lines, sources</td></tr>
+      <tr><td>Click a block or label</td><td>details: plain summary, technical lines, how each fact is known</td></tr>
       <tr><td><span class="kbd">Space</span></td><td>play / pause a scenario</td></tr>
       <tr><td><span class="kbd">←</span> <span class="kbd">→</span></td><td>previous / next step</td></tr>
       <tr><td><span class="kbd">Home</span> <span class="kbd">End</span></td><td>first / last step</td></tr>
@@ -8628,8 +8782,8 @@ void main() {
     </table>
     <h4>What you are looking at</h4>
     <p>The bottom slab is the board, the slab across the cable the PC. The glowing plane above the board is the software: each block hangs by a dashed thread from where its code is stored. The processor and the flash chip open up (Layers → Open up, or click them). Packets are coloured by signal type (Legend).</p>
-    <p>Positions are schematic. Each block's mark says how sure the notes are: <b>measured</b> on the board, <b>static</b> (read from the firmware), <b>inferred</b>, or <b>unknown</b>. The notes' gaps and contradictions are listed under “Gaps &amp; conflicts”.</p>
-    <h4>Credits</h4><p class="small muted">Built from a private research notebook; the cited notes are a private notebook and are not part of this page. Measurements come from the owner's board; where one needed a diagnostic change, the text says so. Rendering: three.js r187 (MIT licence, included in this file). No network access: everything is inside this one file.</p>`));
+    <p>Positions are schematic. Each block's mark says how a fact is known: <b>measured</b> on the board, <b>static</b> (read from the firmware or the boot ROM), <b>single reading</b> (read from the firmware once, not independently verified), <b>inferred</b>, <b>general</b> chip knowledge, or <b>unknown</b>. Open questions are listed under “Gaps &amp; conflicts”.</p><h4>What this page is based on</h4><p>Hands-on reverse engineering of one board: flash dumps, disassembly of the boot ROM, bootloader and firmware, and measurements over USB, some of them with a small diagnostic patch (the steps say which). Pin assignments marked 'board description' come from a third-party description of this hardware.</p>
+    <h4>Credits</h4><p class="small muted">Rendering: three.js r187 (MIT licence, included in this file). No network access: everything is inside this one file.</p>`));
 
   /* ----- welcome ----- */
   function closeWelcome() { $('#welcome').hidden = true; }
