@@ -300,7 +300,7 @@ window.BOARD_DATA = {
   nodes: [
     {
       id: "soc",
-      label: "Processor (i.MX RT1062)",
+      label: "Processor (i.MX RT1061)",
       kind: "hw",
       mark: "measured",
       shape: "chip",
@@ -309,7 +309,8 @@ window.BOARD_DATA = {
       opens: "soc",
       one: "The brain of the board: one chip with the CPU core, all of its working memory and the circuits that talk to buttons, sticks, USB and everything else. Open it to look inside.",
       tech: [
-        "RT1060 family, part RT1062: one Cortex-M7 core, Thumb-2 code.",
+        "i.MX RT1060 family. The package is marked MIMXRT1061DVL6A (read off a photo of the board); an outside board description names the sister part RT1062.",
+        "One Cortex-M7 core, Thumb-2 code.",
         "Boot ROM at `0x00200000`; the ROM addresses here are for one ROM image (HAB 4.3.7).",
         "Internal RAM only: the MPU and heap tables use the chip's own 1 MB; nothing references the external-memory controller.",
         "Secure boot: shipped closed. On this board one fuse bit (field return) is burned, so the ROM's trust check no longer blocks images. See the fuse box inside."
@@ -334,6 +335,7 @@ window.BOARD_DATA = {
         "NOR flash on the FlexSPI controller (`0x402A8000`), mapped at `0x60000000` (execute in place).",
         "4 KB erase sectors; writes page-aligned (`0x100`) and only to erased pages.",
         "Device ID read as `0x17c8` (16 MB).",
+        "Package marking: 25LQ128D, a 16 MB part (read off a photo of the board).",
         "A full 16 MB copy was read out over USB for the analysis; the contents shown here are the image as shipped."
       ],
       src: [
@@ -783,8 +785,11 @@ window.BOARD_DATA = {
       shape: "ghost",
       pos: [-9, -14.5],
       size: [2.4, 0.5, 1.6],
-      one: "Crystals and clock setup are not known. Known: the timer the firmware uses ticks at 75 MHz.",
-      tech: ["Not known: crystals and clock (PLL) setup.", "GPT2 runs at 75 MHz (read from the running firmware)."],
+      one: "Two crystals sit beside the processor (seen in a photo of the board); their frequencies and the clock setup are not established. Known: the timer the firmware uses ticks at 75 MHz.",
+      tech: [
+        "Two crystals beside the processor in a photo of the board; frequencies and PLL setup not established.",
+        "GPT2 runs at 75 MHz (read from the running firmware)."
+      ],
       src: [["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]]
     },
     {
@@ -2164,7 +2169,7 @@ window.BOARD_DATA = {
           cap: "Everything runs on one chip. It opens up: a CPU core, three kinds of on-chip memory, the fuse box and the circuits that talk to the outside world.",
           focus: ["soc_core", "soc_dtcm", "soc_ocram", "soc_usb", "soc_gpio", "soc_ocotp"],
           open: ["soc"],
-          tech: "RT1062, one Cortex-M7 core, 1 MB internal RAM, no external memory.",
+          tech: "RT1061, one Cortex-M7 core, 1 MB internal RAM, no external memory.",
           src: [["Flash dump of the board and disassembly of the stock firmware image", ""]]
         },
         {
