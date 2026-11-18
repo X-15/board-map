@@ -427,12 +427,15 @@ window.BOARD_DATA = {
       id: "trig_r",
       label: "Right trigger (R2)",
       kind: "hw",
-      mark: "measured",
+      mark: "static",
       shape: "trigger",
       pos: [12, -16],
       size: [4, 1.6, 2.6],
       one: "The right analog trigger, read like the left one.",
-      tech: ["ADC1 channel 8, 32-sample averaging.", "Triggers have no pin interrupt: they are only seen by the 4 ms timed sample."],
+      tech: [
+        "ADC1 channel 8, 32-sample averaging.",
+        "Triggers are analog; they are assumed to have no pin interrupt and to be seen only by the 4 ms timed sample (an inference from the board description: four reported buttons showed no interrupt, two of which may be these triggers)."
+      ],
       src: [["Disassembly of the stock firmware's stick code", ""], ["Third-party board description of this hardware (not all checked on the board)", ""]]
     },
     {
@@ -457,14 +460,14 @@ window.BOARD_DATA = {
       id: "btn_face",
       label: "Buttons A B X Y",
       kind: "hw",
-      mark: "measured",
+      mark: "inferred",
       shape: "dome4",
       pos: [17, -3],
       size: [6, 0.6, 6],
       one: "The four face buttons. Pressing one connects a pin to ground; the processor notices within microseconds.",
       tech: [
         "A GPIO2_IO00, B GPIO2_IO01, X GPIO2_IO02, Y GPIO2_IO03; pull-up, active low (board description).",
-        "Pin interrupt -> sample 20-30 us, sample -> report built 250-300 us. Measured through the memory-read diagnostic patch (trace ring)."
+        "Pin interrupt -> sample 20-30 us, sample -> report built 250-300 us: measured pooled over the buttons that have a pin interrupt; which reported button is which pin was not mapped. Measured through the memory-read diagnostic patch (trace ring)."
       ],
       src: [
         ["Third-party board description of this hardware (not all checked on the board)", ""],
@@ -554,7 +557,7 @@ window.BOARD_DATA = {
       one: "Where the cable to the PC plugs in. Everything between board and PC (input, rumble, logs, flashing) passes through here.",
       tech: [
         "USB1 with its PHY, high speed (read from the running device).",
-        "Device and host mode are declared in the board description; only device mode is used.",
+        "Device and host mode are declared in the board description; which one the stock firmware uses was not checked (towards the PC it behaves as a device).",
         "The board runs on its battery: a replug does not restart it."
       ],
       src: [
@@ -579,7 +582,7 @@ window.BOARD_DATA = {
       id: "charger",
       label: "Battery charger",
       kind: "hw",
-      mark: "measured",
+      mark: "static",
       shape: "box",
       pos: [14, 9],
       size: [2.6, 0.6, 2.6],
@@ -751,7 +754,7 @@ window.BOARD_DATA = {
       shape: "ghost",
       pos: [-31, -12.5],
       size: [2.6, 0.5, 2.6],
-      one: "At start-up the firmware reads five button pins; one particular combination reboots into the download mode. Which buttons is not known.",
+      one: "At start-up the firmware reads five input pins (taken to be buttons); one particular combination reboots into the download mode. Which buttons is not known.",
       tech: [
         "Board init (`board.cc`, `0x6088a29c`): five GPIO inputs; four reading 0 and the fifth non-zero -> reboot into the BootROM.",
         "Pins and buttons: not worked out."
@@ -860,7 +863,7 @@ window.BOARD_DATA = {
       tech: [
         "Bootloader writes `IOMUXC_GPR17 = 0xeaaaaaaa`: 480 KB DTCM + 32 KB ITCM (top of DTCM `0x20078000`).",
         "Fuse default would be 256 KB OCRAM, 128 KB DTCM, 128 KB ITCM (board description).",
-        "Not reset when going to SDP from the bootloader: a suspected reason why the flashloader fails from that route (untested)."
+        "The board description says these registers are not reset when going to SDP from the bootloader; that is one untested idea for why the flashloader fails from that route. The bootloader's code writes this split only after its jump to the ROM, so the idea is open."
       ],
       src: [
         ["Disassembly of the bootloader from the board's flash dump", ""],
@@ -904,7 +907,7 @@ window.BOARD_DATA = {
       pos: [4, -9.5],
       size: [3.2, 0.8, 2.4],
       range: [0x401F0000, 0x401F3FFF],
-      one: "The chip's stopwatch. The firmware stamps input events with it in microseconds and runs the 4 ms input timer.",
+      one: "The chip's stopwatch. The firmware stamps input events with it in microseconds. What drives the 4 ms input tick was not identified.",
       tech: [
         "GPT2 at `0x401F0000`, 75 MHz, 32-bit counter with a software high word; rolls over every 57.3 s.",
         "The clock rate and the rollover were read from the running firmware with a diagnostic patch."
@@ -1267,9 +1270,9 @@ window.BOARD_DATA = {
       mark: "measured",
       disputed: true,
       range: [0x60030000, 0x60037FFF],
-      one: "The firmware writes and then erases records here at every start. What they are is disputed.",
+      one: "In one test a boot erased the records here. What they are is disputed.",
       tech: [
-        "`0x34000`: content in the backup, blank after a boot; written back, one 12 s boot erased it again (measured, `cycle_check.py`).",
+        "`0x34000`: the original backup had content here, and it was blank after a boot. With the content written back, one 12 s boot erased it again (one test, `cycle_check.py`, on a board carrying the restart patch); with the sector blank, boots left it blank. Why the content survived earlier boots is not known.",
         "Strings in the firmware call it the tombstone (crash log) partition; the board description has no entry for `0x30000`-`0x37fff`."
       ],
       src: [
@@ -1322,7 +1325,7 @@ window.BOARD_DATA = {
       parent: "flash",
       mark: "measured",
       range: [0x60800000, 0x6081FFFF],
-      one: "The second program to run. It picks which firmware slot to start and checks it first.",
+      one: "The second program to run. It picks which firmware slot to start and checks a new or changed slot first.",
       tech: [
         "Own IVT at `0x60800000` (still with CSF `0x60818000`), vector table `0x60801000` (SP `0x20078000`, reset `0x608015b5`).",
         "Code `0x60800000`-`0x60819fff`; used range up to `0x81ffff`."
@@ -1394,10 +1397,10 @@ window.BOARD_DATA = {
       mark: "measured",
       pos: [-29, -9],
       size: [5.6, 0.6, 3],
-      one: "The ROM's signature check. It asks the fuse box first: with the field-return bit burned, its verdict no longer stops any image from running.",
+      one: "The ROM's signature check. At the end it asks the fuse box: with the field-return bit burned, its verdict no longer stops any image from running.",
       tech: [
         "Finalizer `FUN_00202194`: when `hab_get_config() != 0xCC` (closed), every stage's status is replaced by `0xF0` (success), for any config byte.",
-        "With the bit burned the config byte is `0x33` (field return): signed and unsigned images both pass. The shipped images are signed and would boot on a closed board too; what changes is that a modified image is no longer blocked.",
+        "With the bit burned the config byte is `0x33` (field return): signed and unsigned images both pass. The shipped images carry signatures (whether they verify on a closed board was not tested here); what changes is that a modified image is no longer blocked.",
         "Checked by running the ROM's own routine in an emulator with the bit flipped, and on the board: the download mode reports 'not closed' (`0x56787856`) and an unsigned helper loaded over it runs."
       ],
       src: [
@@ -1477,7 +1480,7 @@ window.BOARD_DATA = {
       mark: "measured",
       pos: [-20.5, -2],
       size: [5.6, 0.6, 3],
-      one: "Looks at a slot before starting it: sane start addresses, then the ROM's trust check. Has no cryptography of its own.",
+      one: "Looks at a slot before starting it when the slot is new, changed or explicitly requested: sane start addresses, then the ROM's trust check. Has no cryptography of its own.",
       tech: [
         "`0x6080200c`: SP in DTCM, vectors in the slot, `0xFFFFFFFF` at `+0x3fc`.",
         "No IVT -> accepted only when the main IVT has no signature pointer. IVT -> ROM HAB entry / authenticate / exit.",
@@ -1510,7 +1513,7 @@ window.BOARD_DATA = {
         "Start-up `0x60843ad4`: WDOG1/2 off, RTWDOG off.",
         "Board init checks a five-pin button combination (-> reboot into ROM).",
         "Reports the boot attempt via `SRC_GPR5` (`1` first, later `2`).",
-        "Erases the records at flash `0x34000` (measured)."
+        "In one test it erased the records at flash `0x34000` (see the records block)."
       ],
       src: [["Disassembly of the stock firmware", ""], ["Disassembly of the bootloader from the board's flash dump", ""]]
     },
@@ -1602,7 +1605,7 @@ window.BOARD_DATA = {
       one: "Answers special USB commands from the PC: build info, start the log channel, reboot into download mode, and more.",
       tech: [
         "Dispatcher `0x608f9f6c`, called in the USB interrupt for request codes above `0x7f` (class type `0x21`/`0xA1` to interface 0).",
-        "`0x80` charging off, `0x81` build number, `0x82` shipping mode, `0x85` bug report, `0x86` factory wipe, `0x87`-`0x8a` strings, `0x8b` start vendor task, `0x8c` its state, `0xC0` reboot to ROM, `0xC1`-`0xC5` Wi-Fi.",
+        "`0x80` charging off, `0x81` build number, `0x82` shipping mode, `0x85` bug report, `0x86` factory wipe, `0x87`-`0x8a` strings, `0x8b` start vendor task, `0x8c` its state, `0xC0` reboot to ROM, `0xC1`-`0xC4` Wi-Fi credentials, `0xC5` a setup mode (not traced).",
         "Vendor-type requests never reach it (answered with the bytes at address 0)."
       ],
       src: [["Disassembly of the stock firmware; the request was sent to the board", ""]]
@@ -1668,7 +1671,7 @@ window.BOARD_DATA = {
       size: [6, 0.6, 3],
       one: "Every part of the firmware writes log lines here; the logger passes them on to its listeners.",
       tech: [
-        "Records: time (ms since start), level (debug/info/error), source file, line, text.",
+        "Records: time stamp (unit not established), level (debug/info/error), source file, line, text.",
         "Three listener slots; the firmware fills two; the third serves the USB log stream (locked on a shipped unit).",
         "Small replay buffer: the first replay held 44 lines from 63 s of uptime. Measured through the log-unlock diagnostic patch."
       ],
@@ -1746,7 +1749,7 @@ window.BOARD_DATA = {
       one: "The PC's USB port. It asks the board for new data every 4 ms: that wait is most of the delay from button to game.",
       tech: [
         "Polls the interrupt endpoints at the descriptor's interval: byte `06` = 4 ms at high speed.",
-        "Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged."
+        "Report interval while a stick moved: median 4.00 ms over only 7 intervals read off the measuring window. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged."
       ],
       src: [["USB descriptors read from the running board and from its flash dump", ""], ["Measured on the board: input-report timing over USB", ""]]
     },
@@ -1757,7 +1760,7 @@ window.BOARD_DATA = {
       mark: "measured",
       pos: [45, -12],
       size: [5, 0.8, 3],
-      one: "Windows' generic USB driver. It takes the board's vendor interface (and the chip's download-mode device), which is how the tools talk to the board.",
+      one: "Windows' generic USB driver, which the firmware's own descriptor set asks for on the vendor interface; the tools use it there. The chip's download-mode device needs a WinUSB/libusb binding set up on the PC.",
       tech: [
         "The firmware's own descriptor set asks Windows for WinUSB on interface 0.",
         "Tools reached interface 0 of the unmodified firmware (request `0xC0`, measured)."
@@ -1829,7 +1832,7 @@ window.BOARD_DATA = {
       pos: [-4, -15],
       size: [1.8, 0.45, 1.3],
       range: [0x401F4400, 0x401F4403],
-      one: "The one bit that differs from a shipped board: fuse word 0x400, bit 31, the field-return bit. It is burned (1).",
+      one: "The bit that makes the ROM's config byte 0x33: fuse word 0x400, bit 31, the field-return bit. It is burned (1). The word's value before the burn was not recorded.",
       tech: [
         "Read back as set: `0x401F4400` = `0xc0b28c03` (bit 31 = 1), after a real power cycle.",
         "Effect: the ROM's config byte becomes `0x33` (field return) instead of `0xCC` (closed); the trust check then passes every image.",
@@ -1898,10 +1901,10 @@ window.BOARD_DATA = {
       mark: "static",
       pos: [14, -13.5],
       size: [6, 0.6, 3],
-      one: "The firmware's over-the-air update check. On its way it sets the dogfood flag when the device's update track starts with 'df-' or 'qa-', before any update is downloaded, and never clears it.",
+      one: "The firmware's over-the-air update check. On its way it sets the dogfood flag when the device's update track starts with 'df-' or 'qa-', before any update is downloaded. The update checker itself never clears it; whether a factory reset or an unlocked key erase does is not known.",
       tech: [
         "`0x6085431c`. Table `0x60abb3a4` points to the strings `df-` and `qa-` (`0x60abb81a`); the loop `0x608543ae`-`0x608543f4` takes each, and if the track string is at least as long and `memcmp` (`0x60aaef50`) says it starts with it, writes the 32-bit value 1 under key `0x1c` (`bl 0x60a8e894` at `0x608543ee`). Re-checked against the image.",
-        "Prefix test, case-sensitive; there is no `-qa` string in the image. The write comes before the update request is sent, so a mere check sets it. Nothing writes 0.",
+        "Prefix test, case-sensitive; there is no `-qa` string in the image. The write comes before the update request is sent, so a mere check sets it. The update checker never writes 0; whether a factory reset clears the key is not known.",
         "Runs only if `p_NoOta` is not set, the firmware runs from partition 1 or 2, and the board has a network connection (Wi-Fi): single reading.",
         "Its update task also shows an LED pattern on 'image reverted' on a DF device (single reading).",
         "Earlier work missed this writer because the decompiler export stops disassembling just before the loop."
@@ -1935,11 +1938,11 @@ window.BOARD_DATA = {
       mark: "single",
       pos: [14, -2.5],
       size: [6, 0.6, 3],
-      one: "Encrypts the request to the device-configuration service. It does not check the server's name: any certificate that chains to one of its six built-in roots passes.",
+      one: "Encrypts the request to the device-configuration service. On a first reading of the code it does not check the server's name: no host name is passed to the TLS layer, so a certificate chaining to one of its six built-in roots would pass (single reading, not independently confirmed).",
       tech: [
         "Server certificate must chain to one of six built-in public roots (trust list `0x200461a0`); no pinning of a key or leaf.",
         "Expired or not-yet-valid certificates are accepted on this path (flag bit 1 of the client's settings).",
-        "No host name is given to the TLS layer: no server-name extension, no name check; the host name goes only to the TCP connect. A certificate for any name under those roots would pass.",
+        "No host name is given to the TLS layer: no server-name extension, no name check; the host name goes only to the TCP connect. A certificate for any name under those roots would pass on this reading.",
         "The device presents its own certificate and key (mutual TLS).",
         "A single reading of code without symbols, function names inferred; it deserves a second, independent reading. No request was made and nothing was tried."
       ],
@@ -2054,7 +2057,7 @@ window.BOARD_DATA = {
     { id: "r_bl_wdog", from: "fw_bl_reset", to: "soc_wdog", sig: "reg", label: "watchdogs off", mark: "static" },
     { id: "k_bl_sdp", from: "fw_bl_reset", to: "fw_sdp", sig: "call", label: "GPR6 = 1", mark: "measured" },
     { id: "k_bl_main", from: "fw_bl_reset", to: "fw_bl_select", sig: "call", label: "GPR6 = 0", mark: "static" },
-    { id: "k_bl_bootapp", from: "fw_bl_reset", to: "fw_bl_check", sig: "call", label: "GPR6 = 2 / 3", mark: "measured" },
+    { id: "k_bl_bootapp", from: "fw_bl_reset", to: "fw_bl_check", sig: "call", label: "GPR6 = 2 / 3 (only 2 exercised)", mark: "static" },
     { id: "k_bl_sel_check", from: "fw_bl_select", to: "fw_bl_check", sig: "call", label: "check the chosen slot", mark: "static" },
     { id: "f_bl_meta", from: "fw_bl_select", to: "fl_kvboot", sig: "bus", label: "slot records (location not confirmed)", mark: "inferred" },
     { id: "k_bl_usb", from: "fw_bl_select", to: "fw_bl_usb", sig: "call", label: "nothing bootable", mark: "static" },
@@ -2066,14 +2069,14 @@ window.BOARD_DATA = {
     { id: "r_app_wdog", from: "fw_app_start", to: "soc_wdog", sig: "reg", label: "watchdogs off", mark: "static" },
     { id: "r_app_gpr5", from: "fw_app_start", to: "soc_src", sig: "reg", label: "SRC_GPR5: 1, then 2", mark: "static" },
     { id: "k_app_kv", from: "fw_app_start", to: "fw_kv", sig: "call", label: "read calibration", mark: "static" },
-    { id: "f_app_rec", from: "fw_app_start", to: "fl_rec", sig: "bus", label: "erases 0x34000", mark: "measured" },
+    { id: "f_app_rec", from: "fw_app_start", to: "fl_rec", sig: "bus", label: "erased 0x34000 in one test", mark: "measured" },
     { id: "k_app_reboot", from: "fw_app_start", to: "fw_reboot", sig: "call", label: "button combo", mark: "static" },
     { id: "d_app_heap", from: "fw_app_start", to: "ram_heap", sig: "data", label: "heap table", mark: "static" },
     { id: "k_kv_sticks", from: "fw_kv", to: "fw_sticks", sig: "data", label: "calibration (key 0x51)", mark: "static" },
     { id: "f_kv_user", from: "fw_kv", to: "fl_kvuser", sig: "bus", label: "key-value records", mark: "inferred" },
     { id: "f_kv_factory", from: "fw_kv", to: "fl_kvfactory", sig: "bus", label: "key-value records", mark: "inferred" },
     { id: "g_input", from: "soc_gpio", to: "fw_input", sig: "gpio", label: "pin interrupt wakes the task", mark: "measured" },
-    { id: "t_input", from: "soc_gpt", to: "fw_input", sig: "reg", label: "4 ms timer", mark: "measured" },
+    { id: "t_input", from: "soc_gpt", to: "fw_trace", sig: "reg", label: "time stamps (75 MHz)", mark: "static" },
     { id: "a_sticks", from: "soc_adc", to: "fw_sticks", sig: "analog", label: "12-bit samples", mark: "static" },
     { id: "k_input_sticks", from: "fw_input", to: "fw_sticks", sig: "call", label: "sample pass", mark: "static" },
     { id: "k_input_hid", from: "fw_input", to: "fw_hid", sig: "call", label: "input data", mark: "measured" },
@@ -2091,19 +2094,19 @@ window.BOARD_DATA = {
     { id: "k_vendor_main", from: "fw_vendor", to: "fw_main", sig: "call", label: "0x86: wipe, then reset", mark: "static" },
     { id: "k_vendor_power", from: "fw_vendor", to: "fw_power", sig: "call", label: "0x80 charging off", mark: "static" },
     { id: "k_vtask_usb", from: "fw_vtask", to: "fw_usbstack", sig: "usb", label: "bulk 0x87 / 0x07", mark: "measured" },
-    { id: "k_logger_vtask", from: "fw_logger", to: "fw_vtask", sig: "log", label: "stock log stream sink", mark: "measured" },
+    { id: "k_logger_vtask", from: "fw_logger", to: "fw_vtask", sig: "log", label: "stock log stream sink", mark: "static" },
     { id: "d_logger_obj", from: "fw_logger", to: "ram_logger", sig: "data", label: "sink table", mark: "static" },
-    { id: "k_input_logger", from: "fw_input", to: "fw_logger", sig: "log", label: "log lines", mark: "measured" },
-    { id: "k_power_logger", from: "fw_power", to: "fw_logger", sig: "log", label: "log lines", mark: "measured" },
-    { id: "k_reboot_rom", from: "fw_reboot", to: "fw_rom", sig: "call", label: "ROM API 0xEB100000", mark: "measured" },
+    { id: "k_input_logger", from: "fw_input", to: "fw_logger", sig: "log", label: "log lines", mark: "static" },
+    { id: "k_power_logger", from: "fw_power", to: "fw_logger", sig: "log", label: "log lines", mark: "static" },
+    { id: "k_reboot_rom", from: "fw_reboot", to: "fw_rom", sig: "call", label: "ROM API 0xEB100000", mark: "static" },
     { id: "r_reboot_src", from: "fw_reboot", to: "soc_src", sig: "reg", label: "other chip revisions: GPR6 = 1", mark: "static" },
-    { id: "k_main_rom", from: "fw_main", to: "fw_rom", sig: "call", label: "restart ends in a reset", mark: "measured" },
+    { id: "k_main_rom", from: "fw_main", to: "fw_rom", sig: "call", label: "restart ends in a reset", mark: "static" },
     { id: "k_haptics_power", from: "fw_haptics", to: "fw_power", sig: "call", label: "battery voltage", mark: "static" },
     { id: "i_power", from: "fw_power", to: "soc_i2c1", sig: "i2c", label: "gauge register 0x04", mark: "static" },
     { id: "p_haptics_pwm", from: "fw_haptics", to: "soc_pwm", sig: "pwm", label: "duty 0-100 %", mark: "static" },
     { id: "k_radio_bt", from: "fw_radio", to: "soc_lpuart3", sig: "serial", label: "Bluetooth", mark: "static" },
     { id: "k_radio_wifi", from: "fw_radio", to: "soc_usdhc", sig: "serial", label: "Wi-Fi", mark: "static" },
-    { id: "h_winusb", from: "pc_host", to: "pc_winusb", sig: "usb", label: "vendor interface; download mode", mark: "measured" },
+    { id: "h_winusb", from: "pc_host", to: "pc_winusb", sig: "usb", label: "vendor interface; download mode (user-set binding)", mark: "measured" },
     { id: "h_hid", from: "pc_host", to: "pc_hid", sig: "usb", label: "gamepad interface; flashloader", mark: "measured" },
     { id: "t_entersdp", from: "tool_entersdp", to: "pc_winusb", sig: "usb", label: "class request 0xC0", mark: "measured" },
     { id: "t_flash_w", from: "tool_flash", to: "pc_winusb", sig: "usb", label: "SDP", mark: "measured" },
@@ -2166,7 +2169,7 @@ window.BOARD_DATA = {
         },
         {
           t: "The one change: a burned fuse",
-          cap: "This edition shows the board as shipped with exactly one change: a single fuse bit, the field-return bit, is burned. From then on the chip's trust check lets any image run.",
+          cap: "This edition shows the board as shipped with one change: a single fuse bit, the field-return bit, is burned (the word's value before the burn was not recorded). From then on the chip's trust check lets any image run.",
           nodes: ["fuse_fr", "soc_ocotp", "fw_hab"],
           focus: ["fuse_fr", "soc_ocotp", "soc_rom"],
           open: ["soc"],
@@ -2217,7 +2220,6 @@ window.BOARD_DATA = {
           cap: "Power comes on. The processor starts the program built into it at the factory: the Boot ROM.",
           nodes: ["soc", "soc_rom", "fw_rom", "soc_core"],
           open: ["soc"],
-          rt: "first microseconds",
           mark: "static",
           tech: "ROM at 0x00200000. The addresses here belong to one ROM image (HAB 4.3.7).",
           src: [
@@ -2245,7 +2247,7 @@ window.BOARD_DATA = {
         },
         {
           t: "Trust check: the burned fuse",
-          cap: "The ROM checks the bootloader's signature, but first it asks the fuse box. Because the field-return bit is burned, the config byte is no longer 'closed', and the check's verdict is forced to 'pass' for any image. The shipped image is signed and would pass anyway; the fuse matters for images that are not.",
+          cap: "The ROM runs its signature check. At the end, a finalizer asks the fuse box for the config byte; because the field-return bit is burned, the byte is no longer 'closed', so the verdict is forced to 'pass' for any image. The shipped image is signed; with the fuse burned the verdict is 'pass' whether or not a signature verifies.",
           flows: [["fw_rom", "fw_hab", "fuse_fr"]],
           open: ["soc"],
           mark: "measured",
@@ -2276,21 +2278,12 @@ window.BOARD_DATA = {
           src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
-          t: "Set up memory, watchdogs off",
-          cap: "The bootloader splits the fast RAM (lots of data memory, little code memory) and switches the watchdog timers off.",
-          flows: [["fw_bl_reset", "soc_iomuxc"], ["fw_bl_reset", "soc_wdog"]],
-          open: ["soc"],
-          mark: "static",
-          tech: "IOMUXC_GPR17 = 0xeaaaaaaa -> 480 KB DTCM + 32 KB ITCM. WDOG1/2 and RTWDOG off.",
-          src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Disassembly of the stock firmware", ""]]
-        },
-        {
           t: "Read the boot request",
-          cap: "It reads a register that survives restarts (SRC_GPR6): 1 means 'go to download mode', 2 or 3 'start slot A or B now', 0 'do the normal choice'.",
+          cap: "Before anything else it reads a register that survives restarts (SRC_GPR6): 1 means 'go to download mode' and is acted on at once; 2 or 3 ('start slot A or B now') are acted on after the memory set-up further down; 0 means 'do the normal choice'.",
           flows: [["fw_bl_reset", "soc_src"]],
           open: ["soc"],
           mark: "measured",
-          tech: "Reset handler 0x608015b4 reads and clears SRC_GPR6 (0x400F8034). Values 1 and 2 were exercised on the board.",
+          tech: "Reset handler 0x608015b4 reads and clears SRC_GPR6 (0x400F8034). Values 1 and 2 were exercised on the board. Value 1 jumps to the ROM before the memory split is written; other non-zero values are acted on after it.",
           src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
@@ -2298,21 +2291,30 @@ window.BOARD_DATA = {
           cap: "With 1 in that register the bootloader jumps into the ROM's download mode. It works, but a flashloader loaded from this route did not start; the cause is not known.",
           flows: [["fw_bl_reset", "fw_sdp"]],
           mark: "measured",
-          tech: "Jump to the ROM HAB failsafe entry (RVT +0x28). Suspected cause of the failure: the bootloader's FlexRAM split is still in force (untested).",
+          tech: "Jump to the ROM HAB failsafe entry (RVT +0x28). Cause not established. One untested idea is a memory-split setting left over from earlier code; the bootloader itself writes its split only after this jump.",
           src: [["Tested on the board with a test program", ""], ["Inference from the third-party board description", ""]]
         },
         {
+          t: "Set up memory, watchdogs off",
+          cap: "Unless the request was for download mode, the bootloader next splits the fast RAM (lots of data memory, little code memory) and switches the watchdog timers off.",
+          flows: [["fw_bl_reset", "soc_iomuxc"], ["fw_bl_reset", "soc_wdog"]],
+          open: ["soc"],
+          mark: "static",
+          tech: "IOMUXC_GPR17 = 0xeaaaaaaa -> 480 KB DTCM + 32 KB ITCM. WDOG1/2 and RTWDOG off.",
+          src: [["Disassembly of the bootloader from the board's flash dump", ""], ["Disassembly of the stock firmware", ""]]
+        },
+        {
           t: "Choose a slot",
-          cap: "Normally the bootloader looks at its records for each firmware slot (new, testing, failed, passed). Slot A is empty here, so it is slot B.",
+          cap: "Normally the bootloader keeps a record for each firmware slot (new, testing, failed, passed) and starts the active one, which here is slot B. Why it picks slot B on a normal start has not been worked out: it still picked B when slot A held a valid test image.",
           flows: [["fw_bl_reset", "fw_bl_select", "fl_kvboot"], ["soc_src", "fw_bl_select"]],
           open: ["flash"],
           mark: "static",
-          tech: "SHA-256 fingerprint per slot is only a change detector: a changed slot gets 'new' and 3 retries. Record location (0x3c000?) not confirmed.",
+          tech: "SHA-256 fingerprint per slot is only a change detector: a changed slot gets 'new' and 3 retries. Record location (0x3c000?) not confirmed. How the bootloader's main loop chooses the slot on a normal start has not been analysed.",
           src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
           t: "Check the firmware",
-          cap: "Before starting slot B it checks the start addresses and asks the ROM's trust check. The stock firmware is signed, and with the fuse burned the check would pass even if it were not.",
+          cap: "On a slot's first start, after it changed, or when a start is requested explicitly, the bootloader checks the start addresses and asks the ROM's trust check. A slot already marked passed or testing is started without this check. The stock firmware is signed; with the fuse burned the check would pass even if it were not.",
           flows: [["fw_bl_select", "fw_bl_check", "fl_slotb"], ["fw_bl_check", "fw_hab"]],
           nodes: ["fl_slota"],
           open: ["flash"],
@@ -2324,8 +2326,8 @@ window.BOARD_DATA = {
           t: "Start the firmware",
           cap: "The bootloader hands over to the stock firmware in slot B.",
           flows: [["fw_bl_check", "fw_app_start"]],
-          mark: "measured",
-          tech: "VTOR = 0x60840000; SP and PC from its vector table; interrupts masked, lr = 0.",
+          mark: "static",
+          tech: "VTOR = 0x60840000; SP and PC from its vector table; interrupts masked, lr = 0. Traced and tested on the explicit-request path; the normal path to the same hand-over was not traced separately.",
           src: [["Disassembly of the bootloader from the board's flash dump", ""]]
         },
         {
@@ -2339,7 +2341,7 @@ window.BOARD_DATA = {
         },
         {
           t: "Side door 3: button combo",
-          cap: "During board set-up the firmware reads five button pins; one combination reboots straight into download mode. Which buttons is not known.",
+          cap: "During board set-up the firmware reads five input pins (taken to be buttons); one combination reboots straight into download mode. Which buttons is not known.",
           flows: [["unk_combo", "fw_app_start", "fw_reboot", "fw_rom"]],
           mark: "unknown",
           tech: "board.cc 0x6088a29c: four inputs at 0 and the fifth non-zero -> reboot into the BootROM.",
@@ -2347,11 +2349,12 @@ window.BOARD_DATA = {
         },
         {
           t: "Running",
-          cap: "The firmware is up: it erases some records at 0x34000, the input timer ticks every 4 ms, and USB is ready for a cable.",
-          flows: [["fw_app_start", "fl_rec"], ["soc_gpt", "fw_input"]],
+          cap: "The firmware is up: in one test it also erased the records at 0x34000, the input timer ticks every 4 ms, and USB is ready for a cable.",
+          flows: [["fw_app_start", "fl_rec"]],
+          focus: ["fw_input"],
           open: ["soc", "flash"],
           mark: "measured",
-          tech: "0x34000 is blanked at every start (cycle_check.py). Input timer 4000 us (3986-4015).",
+          tech: "In one test (cycle_check.py, restart patch on the board) a boot erased content that had been written back to 0x34000; a blank sector stayed blank. Input timer 4000 us (3986-4015).",
           src: [
             ["Tested on the board (flash dumps compared before and after)", ""],
             ["Timed on the board: the firmware's own trace ring read over USB with a diagnostic patch, joined with arrival times on the PC", ""]
@@ -2380,12 +2383,12 @@ window.BOARD_DATA = {
         },
         {
           t: "Find the right bit",
-          cap: "The bit had to be found in this chip's ROM. On older chips of the family the field-return fuse sits elsewhere, and that location on this chip holds the flash configuration word: burning it there would break booting.",
+          cap: "The bit had to be found in this chip's ROM. On the i.MX6/7 chips the field-return fuse sits elsewhere, and that location on this chip holds the flash configuration word: burning it there would break booting.",
           nodes: ["soc_ocotp", "fuse_fr", "soc_rom"],
           focus: ["soc_ocotp", "fuse_fr", "soc_rom"],
           open: ["soc"],
           mark: "static",
-          tech: "Word 0x400 bit 31 is listed as 'Reserved' in the reference manual. The older parts' location maps to OCOTP 0x6E0 here, which is the FlexSPI configuration word.",
+          tech: "Word 0x400 bit 31 is listed as 'Reserved' in the reference manual. The i.MX6/7 location maps to OCOTP 0x6E0 here, which is the FlexSPI configuration word.",
           src: [["Disassembly of the boot ROM, checked by emulating it with the fuse bit flipped", ""]]
         },
         {
@@ -2444,7 +2447,7 @@ window.BOARD_DATA = {
         },
         {
           t: "No lock in the way",
-          cap: "Nothing on this chip stops the write: the ROM never writes fuses itself and arms no lock, and the sticky lock bit reads clear.",
+          cap: "No software lock is armed on this chip: the ROM never writes fuses itself, and the sticky lock bit reads clear. The fuse lock bits for this word were not read.",
           nodes: ["soc_ocotp", "soc_rom"],
           focus: ["soc_ocotp", "soc_rom", "fuse_fr"],
           open: ["soc"],
@@ -2516,7 +2519,7 @@ window.BOARD_DATA = {
         },
         {
           t: "Two drivers bind",
-          cap: "Windows binds WinUSB to the vendor interface and its built-in HID driver to the gamepad. Nothing needs installing.",
+          cap: "Windows binds WinUSB to the vendor interface and its built-in HID driver to the gamepad.",
           flows: [["pc_host", "pc_winusb"], ["pc_host", "pc_hid"]],
           mark: "measured",
           tech: "Tools reached interface 0 of the unmodified firmware; the HID report descriptor (164 bytes) was read and reports were sent through the HID driver (tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged).",
@@ -2527,7 +2530,7 @@ window.BOARD_DATA = {
           cap: "Games that read generic HID gamepads see buttons and sticks; the vendor interface answers the tools. Input reports go out only when something changes, at most every 4 ms.",
           flows: [["pc_hid", "pc_game"], ["pc_winusb", "tool_entersdp"]],
           mark: "measured",
-          tech: "Idle: no input report in 3 s. Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
+          tech: "Idle: no input report in 3 s. Report interval while a stick moved: median 4.00 ms over only 7 intervals read off the measuring window. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
           src: [["Measured on the board: input-report timing over USB", ""]]
         }
       ]
@@ -2536,11 +2539,11 @@ window.BOARD_DATA = {
       id: "press",
       title: "Button press to the PC",
       icon: "●",
-      one: "One press of A, from the finger to the PC, with the timings measured on the owner's board: about 0.3 ms inside the controller, then 0-4 ms waiting for the PC to ask.",
+      one: "One button press, from the finger to the PC, with timings measured over several buttons on the owner's board (which reported button is which pin was not mapped): about 0.3 ms inside the controller, then 0-4 ms waiting for the PC to ask.",
       steps: [
         {
           t: "Press",
-          cap: "A finger presses A. The button connects its pin to ground: the pin goes from 'high' to 'low'.",
+          cap: "A finger presses a button (drawn here as A). The button connects its pin to ground: the pin goes from 'high' to 'low'.",
           flows: [["btn_face", "soc_gpio"]],
           open: ["soc"],
           rt: "contact bounce: up to 13 edges in 0.1 ms",
@@ -2604,7 +2607,7 @@ window.BOARD_DATA = {
         {
           t: "Buttons without an interrupt",
           cap: "Four of the reported buttons have no pin interrupt. They are only noticed by the 4 ms timer sample, so they can be up to 4 ms later. Which physical buttons they are is not mapped.",
-          flows: [["soc_gpt", "fw_input"]],
+          focus: ["fw_input"],
           open: ["soc"],
           rt: "+0-4 ms to the next sample",
           mark: "measured",
@@ -2634,7 +2637,7 @@ window.BOARD_DATA = {
         {
           t: "Every 4 ms",
           cap: "Sticks have no interrupt: the input task samples them every 4 ms.",
-          flows: [["soc_gpt", "fw_input", "fw_sticks"], ["soc_adc", "fw_sticks"]],
+          flows: [["fw_input", "fw_sticks"], ["soc_adc", "fw_sticks"]],
           open: ["soc"],
           rt: "every 4 ms, pass about 0.2 ms",
           mark: "measured",
@@ -2678,7 +2681,7 @@ window.BOARD_DATA = {
           flows: [["fw_hid", "fw_usbstack", "soc_usb", "usb_c", "pc_host", "pc_hid", "pc_game"]],
           open: ["soc"],
           mark: "measured",
-          tech: "Report interval while a stick moved: median 4.00 ms. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
+          tech: "Report interval while a stick moved: median 4.00 ms over only 7 intervals read off the measuring window. Tested while the firmware carried a small restart patch in its vendor-request handler; this path was unchanged.",
           src: [["Measured on the board: input-report timing over USB", ""]]
         },
         {
@@ -2765,10 +2768,11 @@ window.BOARD_DATA = {
         },
         {
           t: "Asking for the channel",
-          cap: "A tool starts the vendor USB task and asks for the unlock challenge. The task answers only that; everything else, the log stream included, waits for a valid unlock.",
+          cap: "A tool starts the vendor USB task with a control request, then asks for the unlock challenge on the bulk endpoints. The task answers only that; everything else, the log stream included, waits for a valid unlock.",
           seq: true,
           flows: [
             ["tool_vbulk", "pc_winusb", "pc_host", "usb_c", "soc_usb", "fw_usbstack", "fw_vendor", "fw_vtask"],
+            ["tool_vbulk", "pc_winusb", "pc_host", "usb_c", "soc_usb", "fw_usbstack", "fw_vtask"],
             ["fw_vtask", "fw_usbstack", "soc_usb", "usb_c", "pc_host", "pc_winusb", "tool_vbulk"]
           ],
           open: ["soc"],
@@ -2778,7 +2782,7 @@ window.BOARD_DATA = {
         },
         {
           t: "Why it stays locked",
-          cap: "The unlock token must be a signature made with the maker's private key; the firmware only holds public keys to check it. A shipped unit therefore stays locked.",
+          cap: "The unlock token must be a signature made with the maker's private key; the firmware only holds public keys to check it. A unit that is not a DF device therefore stays locked (this board is not one).",
           nodes: ["fw_vtask"],
           focus: ["fw_vtask", "fw_vendor", "fw_usbstack"],
           mark: "static",
@@ -2869,7 +2873,7 @@ window.BOARD_DATA = {
         },
         {
           t: "What the TLS client checks",
-          cap: "The server's certificate must chain to one of six built-in root certificates, but no host name is passed to the TLS layer, so the name in the certificate is not checked: a certificate for any name under those roots would pass. Expired certificates are accepted too, and the board shows its own certificate.",
+          cap: "On a first reading of the code, the server's certificate must chain to one of six built-in root certificates, but no host name is passed to the TLS layer, so the name in the certificate would not be checked: a certificate for any name under those roots would pass. Expired certificates also appear to be accepted, and the board presents its own certificate. This is a single reading, not independently confirmed.",
           nodes: ["fw_tls", "net_cfg"],
           focus: ["fw_tls", "net_cfg", "fw_track"],
           mark: "single",
@@ -2878,7 +2882,7 @@ window.BOARD_DATA = {
         },
         {
           t: "The prefix test sets the flag",
-          cap: "If the track name starts with 'df-' or 'qa-', the checker writes IsDfDevice = 1, before any update is requested. Nothing in the firmware ever writes it back to 0.",
+          cap: "If the track name starts with 'df-' or 'qa-', the checker writes IsDfDevice = 1, before any update is requested. The update checker never writes it back to 0; whether a factory reset or the unlocked vendor channel clears it is not known.",
           flows: [["fw_track", "fw_update", "fw_kv", "fl_kvuser"]],
           open: ["flash"],
           mark: "static",
@@ -2991,12 +2995,12 @@ window.BOARD_DATA = {
         },
         {
           t: "Restart",
-          cap: "A reset command restarts the chip, and the normal boot follows.",
+          cap: "A reset command restarts the chip, and the normal boot follows. Usually the stock firmware is back on USB about a second later; in two other runs the board stayed off USB until it was started with its button (not explained).",
           flows: [["fw_flashloader", "fw_rom", "fw_bl_reset", "fw_bl_select", "fw_bl_check", "fw_app_start"]],
           open: ["flash"],
-          rt: "firmware on USB about 1 s after Reset",
+          rt: "firmware on USB about 1 s after Reset (usually)",
           mark: "measured",
-          tech: "Flashloader Reset (0x0b) with SRC_GPR6 = 0: the stock firmware was on USB 1 s later.",
+          tech: "Flashloader Reset (0x0b) with SRC_GPR6 = 0: the stock firmware was on USB 1 s later. Twice a reset left the board off USB until the button was used; the cause is not known.",
           src: [["Tested on the board over USB", ""]]
         },
         {
@@ -3023,7 +3027,7 @@ window.BOARD_DATA = {
       title: "What are the records at 0x34000?",
       nodes: ["fl_rec", "fl_crash", "fl_kvboot"],
       src: [["Flash dumps compared across boots", ""], ["Strings in the stock firmware", ""], ["Third-party board description", ""]],
-      text: "On the board, the firmware writes records at 0x34000 and erases them at every start. Strings in the firmware call the area a crash log ('tombstone'), while the board description has no entry for 0x30000-0x37fff and places crash logs at 0x6000-0x27fff. What the records are is open.",
+      text: "On the board, the original flash dump had records at 0x34000; in one test a boot erased content written back there, while a blank sector stayed blank, and why the content survived earlier boots is not known. Strings in the firmware call the area a crash log ('tombstone'), while the board description has no entry for 0x30000-0x37fff and places crash logs at 0x6000-0x27fff. What the records are is open.",
       shown: "Flash layer marked measured (the behaviour), with a warning sign for its purpose."
     },
     {
@@ -3083,10 +3087,38 @@ window.BOARD_DATA = {
       shown: "Every number is kept; each step or block that uses one says in one line how it was measured."
     },
     {
+      title: "How does the bootloader choose a slot on a normal start?",
+      nodes: ["fw_bl_select", "fl_slota", "fl_slotb"],
+      src: [["Disassembly of the bootloader", ""], ["Test with a program in slot A", ""]],
+      text: "The bootloader keeps a record per slot, but how its main loop picks the slot on a normal start has not been analysed. With a valid test image in slot A the bootloader still started slot B, so an empty slot A is not the explanation.",
+      shown: "The step 'Choose a slot' in the boot scenario says so."
+    },
+    {
+      title: "Why did a flashloader reset sometimes not bring the firmware back?",
+      nodes: ["fw_flashloader", "fw_app_start"],
+      src: [["Resets tried on the board", ""]],
+      text: "Usually a reset of the flashloader brings the stock firmware back on USB within about a second. Twice it did not: after the flashloader had read the whole flash, and after a firmware sector was rewritten, the board stayed off USB until it was started with its button. Neither case is explained. A flashloader loaded from the bootloader's download-mode route does not start either.",
+      shown: "The restart step of the flashloader scenario says so."
+    },
+    {
+      title: "Report rate: 250 Hz or 125 Hz?",
+      nodes: ["pc_host", "fw_hid"],
+      src: [["Measurements over USB", ""], ["Third-party test results", ""]],
+      text: "A short check of this board over USB found reports about every 4 ms (250 Hz, only 7 intervals). A third-party test of this controller model reports 125 Hz, and a circle error of about 7 % against 0.5 % measured here. The observations are not reconciled.",
+      shown: "The report-interval numbers say how few intervals they rest on."
+    },
+    {
+      title: "Firmware log: time stamp unit and replay size",
+      nodes: ["fw_logger", "ram_logger"],
+      src: [["Streamed firmware log", ""]],
+      text: "The unit of the log's time stamps and the size of its replay buffer were not worked out; the first replay held 44 lines from 63 s of uptime.",
+      shown: "The logger block says so."
+    },
+    {
       title: "Who ran the fuse-programming sequence?",
       nodes: ["fuse_fr", "soc_ocotp", "soc_ccm"],
       src: [["Chip reference manual", ""], ["Read back from the chip after a power cycle", ""]],
-      text: "The programming sequence shown is the chip reference manual's; the burned bit was read back after a power cycle. Which program ran the sequence on this board is not recorded.",
+      text: "The programming sequence shown is the chip reference manual's; the burned bit was read back after a power cycle. Which program ran the sequence on this board is not recorded, and neither is the fuse word's value before the burn.",
       shown: "The scenario 'Burning the config fuse': the sequence marked as general chip knowledge, the lock check and the result marked as measured."
     },
     {
